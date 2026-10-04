@@ -62,6 +62,14 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .ctl button[aria-pressed="true"]{color:var(--acc)}
 button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .tline{flex:1;padding-top:16px;min-width:0}
+.cnt{font-family:var(--fd);font-weight:700;font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap;align-self:center;padding:0 4px}
+.cnt b{color:var(--ink)}
+.ctl .tx{width:auto;min-width:38px;padding:0 10px;border-radius:19px;font-family:var(--fd);font-weight:700;font-size:13px}
+#labels.off,#labels.off *{display:none!important}
+.kbd{position:absolute;right:14px;bottom:74px;font-size:11px;color:var(--dim);opacity:0;transition:opacity .3s;pointer-events:none}
+@media (hover:hover){.bar:hover~.kbd{opacity:.9}}
+@media (min-width:900px){.seg .y{font-size:11px}}
+@media (pointer:coarse){.ctl button{width:44px;height:44px}.seg{height:30px}.seg::before,.seg .f{top:13px}.kbd{display:none}}
 .segs{display:flex;gap:3px}
 .seg{flex:1;height:22px;border:0;padding:0;background:transparent;cursor:pointer;position:relative;min-width:0}
 .seg::before{content:'';position:absolute;left:0;right:0;top:9px;height:4px;border-radius:2px;background:rgba(255,255,255,.18)}
@@ -84,7 +92,9 @@ button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .ruler{right:8px;height:28vh;width:50px;transform:translateY(-75%)}
   .ruler .tlab{font-size:9px}
   .bar{padding:8px 10px 12px;gap:8px}
-  .ctl button{width:34px;height:34px}
+  .ctl button{width:38px;height:38px}
+  .ctl .tx{min-width:38px}
+  .cnt{display:none}
   .seg .y{display:none}
   .cap{left:16px;bottom:72px;width:calc(100% - 32px)}
   .lb .bx b{font-size:10.5px}.lb .bx i{font-size:9.5px}
@@ -109,16 +119,21 @@ button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <button id="bPrev" aria-label="Предыдущая сцена"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="2" height="11" rx=".6" fill="currentColor"/><path d="M13 2.8v10.4L5.6 8z" fill="currentColor"/></svg></button>
       <button id="bPlay" aria-label="Пуск"></button>
       <button id="bNext" aria-label="Следующая сцена"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="11.5" y="2.5" width="2" height="11" rx=".6" fill="currentColor"/><path d="M3 2.8v10.4L10.4 8z" fill="currentColor"/></svg></button>
-      <button id="bSnd" aria-label="Звук" aria-pressed="false"></button>
+      <button id="bSnd" aria-label="Звук" aria-pressed="false" title="Звук (M)"></button>
+      <button id="bSpd" class="tx" aria-label="Скорость" title="Скорость (S)">1×</button>
+      <button id="bLab" class="tx" aria-label="Подписи" aria-pressed="true" title="Подписи (L)">Aa</button>
+      <button id="bFs" aria-label="Во весь экран" title="Во весь экран (F)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button>
     </div>
+    <div class="cnt" id="cnt"></div>
     <div class="tline"><div class="segs" id="segs"></div></div>
   </div>
+  <div class="kbd">Пробел — пауза · ←/→ — сцены · S — скорость · L — подписи · F — экран · M — звук</div>
   <div class="intro" id="intro">
     <div class="in">
       <h2>AMD Instinct MI355X<small>от серверной стойки до атома</small></h2>
       <p>3D-разбор: стойка, узел на восемь GPU, модуль OAM, корпус с чиплетами, вычислительный блок, транзистор — и дальше, до одного атома кремния.</p>
       <button id="bStart">Смотреть</button>
-      <div class="hint">Пробел — пауза · ← → — сцены · клик по шкале — переход</div>
+      <div class="hint">Пробел — пауза · ← → — сцены · клик по шкале — переход · свайп — листать</div>
       <div class="err" id="err" hidden>WebGL недоступен в этом браузере — 3D-сцена не может запуститься.</div>
     </div>
   </div>
@@ -171,7 +186,7 @@ function IM(p,geo,mat,n){const m=new THREE.InstancedMesh(geo,mat,n);m.frustumCul
 const _o=new THREE.Object3D(),_c=new THREE.Color();
 function si(im,i,x,y,z,sx=1,sy=1,sz=1,rx=0,ry=0,rz=0){_o.position.set(x,y,z);_o.scale.set(sx,sy,sz);_o.rotation.set(rx,ry,rz);_o.updateMatrix();im.setMatrixAt(i,_o.matrix);}
 function scol(im,i,c,mul=1){_c.set(c).multiplyScalar(mul);im.setColorAt(i,_c);}
-function CT(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy());return t;}
+function CT(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=Math.min(16,R.capabilities.getMaxAnisotropy());t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;return t;}
 function rep(t,x,y){const n=t.clone();n.needsUpdate=true;n.wrapS=n.wrapT=THREE.RepeatWrapping;n.repeat.set(x,y);return n;}
 const GLOW=CT(64,64,(x)=>{const g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.22,'rgba(255,255,255,.6)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);});
 GLOW.encoding=THREE.LinearEncoding;
@@ -571,7 +586,7 @@ function layout(){
   if(tr&&tr.type==='z'){
     const p=clamp(tr.t/tr.d,0,1),e=tr.chain?(tr.first&&tr.last?ease(p):tr.first?p*p:tr.last?1-(1-p)*(1-p):p):ease(p),q=lerp(tr.q0,tr.q1,e);
     const A=L[tr.lo],T=A.tc,s=A.ts,r=s/10,Z=10/s,za=Math.pow(Z,q);
-    const kl=tr.chain?1:(tr.lo===cur?kOf(cur):1),kh=tr.chain?1:(tr.hi===cur?kOf(cur):tr.khi);
+    const kl=tr.chain?1:(tr.lo===cur?kOf(cur):lerp(tr.kl0??1,1,p)),kh=tr.chain?1:(tr.hi===cur?kOf(cur):tr.khi);
     const aA=RM?1-q:1-sstep(.42,.86,q),aB=RM?q:sstep(.12,.6,q);
     place(tr.lo,za,-T[0]*za*q,-T[1]*za*q,-T[2]*za*q,aA,kl);
     place(tr.hi,za*r,T[0]*za*(1-q),T[1]*za*(1-q),T[2]*za*(1-q),aB,kh);
@@ -590,6 +605,8 @@ function layout(){
   const drift=RM?0:Math.sin(gT*.21)*2.2;
   const el=cam.el*Math.PI/180,az=(cam.az+drift)*Math.PI/180,d=fitDist()*cam.df;
   CAM.position.set(Math.sin(az)*Math.cos(el)*d,Math.sin(el)*d,Math.cos(az)*Math.cos(el)*d);CAM.lookAt(0,0,0);
+  /* near/far привязаны к дистанции камеры: 24-битный буфер глубины не «ломается» (z-fighting) на тонких слоях и мелких деталях */
+  CAM.near=d*.12;CAM.far=d*50;CAM.updateProjectionMatrix();
 }
 let bgKey='';const app=$('#app');
 function mix(a,b,t){const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16);const c=i=>Math.round(lerp(A>>i&255,B>>i&255,t));return `rgb(${c(16)},${c(8)},${c(0)})`;}
@@ -621,16 +638,16 @@ const fmtZ=n=>n<1e3?'×'+Math.round(n):n<1e6?'×'+(n<1e4?(n/1e3).toFixed(1).repl
 const LMAX=.4,LMIN=-10,rpos=m=>clamp((LMAX-Math.log10(m))/(LMAX-LMIN),0,1)*100;
 {const ru=$('#ruler');for(let e=0;e>=-10;e--){if(e%2&&e!==-1&&e!==-9)continue;const m=Math.pow(10,e),top=rpos(m)+'%';const tk=document.createElement('div');tk.className='tk';tk.style.top=top;ru.appendChild(tk);const l=document.createElement('div');l.className='tlab';l.style.top=top;l.textContent=fmtLen(m);ru.appendChild(l);}}
 const segs=$('#segs');
-SC.forEach((s,i)=>{const b=document.createElement('button');b.className='seg';b.setAttribute('aria-label',`Сцена ${i+1}: ${s.ru}`);b.innerHTML='<span class="f"></span>'+(i%2===0||i===N-1?`<span class="y">${s.yl}</span>`:'');b.addEventListener('click',()=>go(i));segs.appendChild(b);});
+SC.forEach((s,i)=>{const b=document.createElement('button');b.className='seg';b.setAttribute('aria-label',`Сцена ${i+1}: ${s.ru}`);b.title=`${i+1}. ${s.yl}`;b.innerHTML='<span class="f"></span>'+(i%2===0||i===N-1?`<span class="y">${s.yl}</span>`:'');b.addEventListener('click',()=>go(i));segs.appendChild(b);});
 const segEls=[...segs.children];
-function updateUI(){const s=SC[cur];$('#act').textContent=s.act;
+function updateUI(){const s=SC[cur];$('#act').textContent=s.act;$('#cnt').innerHTML=`<b>${cur+1}</b> / ${N}`;
   cap.classList.add('out');clearTimeout(capTO);
   capTO=setTimeout(()=>{$('#capT').textContent=s.t;$('#capS').textContent=s.s;$('#capR').textContent=s.ru;$('#capD').textContent=s.d;cap.classList.remove('out');},280);
   segEls.forEach((e,i)=>{e.classList.toggle('done',i<cur);e.classList.toggle('cur',i===cur);if(i!==cur)e.firstChild.style.width='';});}
 function chainStep(){const lo=chain.shift(),first=tr===null||!tr.chain,last=chain.length===0;tr={type:'z',chain:1,lo,hi:lo+1,q0:1,q1:0,t:0,d:RM?.35:(first?1.4:last?1.6:.72),first,last};}
 function go(i){
   i=clamp(i,0,N-1);if(i===cur&&!tr)return;const from=cur;chain=[];
-  if(i===from+1&&from<NZ-1){tr={type:'z',lo:from,hi:i,q0:0,q1:1,t:0,d:TRZ,khi:0};sceneT=0;}
+  if(i===from+1&&from<NZ-1){tr={type:'z',lo:from,hi:i,q0:0,q1:1,t:0,d:TRZ,khi:0,kl0:kOf(from)};sceneT=0;}
   else if(i===from-1&&from<NZ){tr={type:'z',lo:i,hi:from,q0:1,q1:0,t:0,d:TRZ,khi:kOf(from)};sceneT=SC[i].dur*.8;}
   else if(SC[i].outro&&from===NZ-1){for(let l=NZ-2;l>=0;l--)chain.push(l);tr=null;chainStep();sceneT=0;}
   else{tr={type:'f',a:from,b:i,t:0,d:RM?.5:1.2};sceneT=0;}
@@ -643,13 +660,18 @@ const IC={play:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M4.5 2.
 const bPlay=$('#bPlay'),bSnd=$('#bSnd');
 function syncPlay(){bPlay.innerHTML=playing?IC.pause:IC.play;bPlay.setAttribute('aria-label',playing?'Пауза':'Пуск');updMaster();}
 function togglePlay(){if(!playing&&cur===N-1&&sceneT>=SC[cur].dur)go(0);playing=!playing;syncPlay();}
+let SPD=1;const SPDS=[1,1.5,2,.5],bSpd=$('#bSpd'),bLab=$('#bLab'),bFs=$('#bFs');
+function cycleSpd(){SPD=SPDS[(SPDS.indexOf(SPD)+1)%SPDS.length];bSpd.textContent=SPD+'×';}
+function toggleLab(){const off=$('#labels').classList.toggle('off');bLab.setAttribute('aria-pressed',String(!off));}
+function toggleFs(){const d=document,e=$('#app');if(d.fullscreenElement||d.webkitFullscreenElement)(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const f=e.requestFullscreen||e.webkitRequestFullscreen;if(f)f.call(e);}}
+bSpd.onclick=cycleSpd;bLab.onclick=toggleLab;bFs.onclick=toggleFs;if(!($('#app').requestFullscreen||$('#app').webkitRequestFullscreen))bFs.hidden=true;
 bPlay.onclick=togglePlay;$('#bPrev').onclick=()=>go(cur-1);$('#bNext').onclick=()=>go(cur+1);
 const intro=$('#intro');
 function start(){intro.classList.add('hide');playing=true;syncPlay();}
 $('#bStart').onclick=start;
 addEventListener('keydown',e=>{
   if(!intro.classList.contains('hide')){if(e.code==='Space'||e.code==='Enter'){e.preventDefault();start();}return;}
-  if(e.code==='Space'){e.preventDefault();togglePlay();}else if(e.code==='ArrowRight')go(cur+1);else if(e.code==='ArrowLeft')go(cur-1);else if(e.code==='Home')go(0);});
+  if(e.code==='Space'){e.preventDefault();togglePlay();}else if(e.code==='ArrowRight')go(cur+1);else if(e.code==='ArrowLeft')go(cur-1);else if(e.code==='Home')go(0);else if(e.code==='End')go(N-1);else if(e.code==='KeyS')cycleSpd();else if(e.code==='KeyL')toggleLab();else if(e.code==='KeyF')toggleFs();else if(e.code==='KeyM')bSnd.click();});
 let px0=null;
 cv.addEventListener('pointerdown',e=>{px0=e.clientX});
 cv.addEventListener('pointerup',e=>{if(px0===null)return;const dx=e.clientX-px0;px0=null;if(dx<-50)go(cur+1);else if(dx>50)go(cur-1);else if(Math.abs(dx)<8&&intro.classList.contains('hide'))togglePlay();});
@@ -667,7 +689,7 @@ bSnd.onclick=()=>{audioInit();if(!AC)return;AC.resume();sndOn=!sndOn;updMaster()
 let last=performance.now(),zStr='',sStr='';
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;gT+=dt;
-  if(playing){sceneT+=dt;if(!tr&&sceneT>=SC[cur].dur){if(cur<N-1)go(cur+1);else{sceneT=SC[cur].dur;playing=false;syncPlay();}}}
+  if(playing){sceneT+=dt*SPD;if(!tr&&sceneT>=SC[cur].dur){if(cur<N-1)go(cur+1);else{sceneT=SC[cur].dur;playing=false;syncPlay();}}}
   if(tr){tr.t+=dt;if(tr.t>=tr.d){if(tr.chain&&chain.length)chainStep();else tr=null;}}
   layout();
   L.forEach(o=>{if(o.g.visible){o.upd(o.k,gT);applyGroup(o);}});
