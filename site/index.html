@@ -201,8 +201,28 @@ const T={};
 T.floor=CT(256,256,(x,w,h)=>{x.fillStyle='#1a1c21';x.fillRect(0,0,w,h);const r=rng(3);for(let i=0;i<900;i++){x.fillStyle=`rgba(255,255,255,${r()*.03})`;x.fillRect(r()*w,r()*h,2,2);}x.strokeStyle='rgba(255,255,255,.08)';x.lineWidth=4;x.strokeRect(2,2,w-4,h-4);});
 T.floor.wrapS=T.floor.wrapT=THREE.RepeatWrapping;T.floor.repeat.set(16,16);
 T.door=CT(128,512,(x,w,h)=>{x.fillStyle='#24272d';x.fillRect(0,0,w,h);x.fillStyle='#0b0c0e';for(let j=0;j<85;j++)for(let i=0;i<21;i++){x.beginPath();x.arc(4+i*6+(j%2)*3,6+j*6,2,0,7);x.fill();}x.fillStyle='#33373e';x.fillRect(0,0,w,10);x.fillRect(0,h-10,w,10);x.fillRect(w-14,200,8,110);});
-T.front=CT(512,96,(x,w,h)=>{x.fillStyle='#2c2f35';x.fillRect(0,0,w,h);for(let i=0;i<4;i++){x.fillStyle='#17191d';x.fillRect(10+i*34,10,30,76);x.fillStyle='#3a3e46';x.fillRect(14+i*34,14,22,4);}
-  x.fillStyle='#0c0d0f';for(let j=0;j<9;j++)for(let i=0;i<46;i++){x.beginPath();x.arc(160+i*6.6+(j%2)*3.3,10+j*9.5,2.3,0,7);x.fill();}x.fillStyle='#1d2024';x.fillRect(478,14,24,68);x.fillStyle='#b8241a';x.fillRect(150,44,3,10);});
+T.front=CT(1024,200,(x,w,h)=>{
+  const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#2d3037');g.addColorStop(.5,'#25282e');g.addColorStop(1,'#1c1e23');x.fillStyle=g;x.fillRect(0,0,w,h);
+  x.fillStyle='#3d4149';x.fillRect(0,0,w,3);x.fillStyle='#0d0e10';x.fillRect(0,h-4,w,4);
+  for(const ex of [0,w-74]){x.fillStyle='#17191d';x.fillRect(ex,0,74,h);x.fillStyle='#2f333a';x.fillRect(ex+(ex?0:73),0,1,h);
+    x.fillStyle='#08090a';x.beginPath();x.arc(ex+37,34,7,0,7);x.fill();x.beginPath();x.arc(ex+37,h-34,7,0,7);x.fill();
+    x.fillStyle='#0a0b0d';x.fillRect(ex+22,78,30,44);x.fillStyle='#3a3e46';x.fillRect(ex+22,78,30,2);}
+  for(let i=0;i<4;i++){const bx0=96+i*70;x.fillStyle='#0f1114';x.fillRect(bx0,22,62,156);x.strokeStyle='#3a3e46';x.lineWidth=2;x.strokeRect(bx0+1,23,60,154);
+    x.fillStyle='#1b1d22';x.fillRect(bx0+6,30,50,118);x.fillStyle='#2a2d34';for(let k=0;k<9;k++)x.fillRect(bx0+8,34+k*12,46,2);
+    x.fillStyle='#4a4f59';x.fillRect(bx0+6,152,50,18);x.fillStyle='#14161a';x.fillRect(bx0+10,157,28,8);
+    x.fillStyle=i===1?'#e8a020':'#3ddc6a';x.beginPath();x.arc(bx0+48,161,3.2,0,7);x.fill();}
+  x.fillStyle='#101114';x.fillRect(392,22,456,156);x.strokeStyle='#33363d';x.lineWidth=2;x.strokeRect(393,23,454,154);
+  x.fillStyle='#030304';for(let j=0;j<16;j++)for(let i=0;i<47;i++){x.beginPath();x.arc(402+i*9.6+(j%2)*4.8,32+j*9.2,3.2,0,7);x.fill();}
+  x.fillStyle='rgba(255,255,255,.06)';for(let j=0;j<16;j++)for(let i=0;i<47;i++){x.fillRect(401+i*9.6+(j%2)*4.8,33+j*9.2,2,1.5);}
+  x.fillStyle='#b8241a';x.fillRect(396,184,46,5);x.fillStyle='rgba(230,233,238,.7)';x.font='600 13px "Exo 2",Arial';x.textBaseline='middle';x.fillText('INSTINCT MI355X',450,187);
+  x.fillStyle='#191b1f';x.fillRect(866,22,86,156);
+  x.fillStyle='#454a53';x.beginPath();x.arc(896,52,17,0,7);x.fill();x.fillStyle='#14161a';x.beginPath();x.arc(896,52,12.5,0,7);x.fill();x.strokeStyle='#454a53';x.lineWidth=2;x.beginPath();x.arc(896,52,7,-2.2,.9);x.stroke();
+  x.fillStyle='#3ddc6a';x.beginPath();x.arc(930,40,4,0,7);x.fill();x.fillStyle='#2f7bff';x.beginPath();x.arc(930,64,4,0,7);x.fill();x.fillStyle='#e8a020';x.beginPath();x.arc(930,88,3.5,0,7);x.fill();
+  x.fillStyle='#07080a';x.fillRect(876,90,32,16);x.fillRect(876,112,32,16);x.strokeStyle='#4a4f59';x.lineWidth=1.5;x.strokeRect(876.5,90.5,31,15);x.strokeRect(876.5,112.5,31,15);
+  x.fillStyle='#d9dce2';x.fillRect(872,142,76,30);x.fillStyle='#14161a';for(let k=0;k<26;k++)x.fillRect(876+k*2.7,146,(k%3?1:1.6),12);x.fillRect(876,162,40,2);x.fillRect(876,166,26,2);});
+T.rail=CT(32,128,(x,w,h)=>{x.fillStyle='#34373e';x.fillRect(0,0,w,h);x.fillStyle='#4a4e57';x.fillRect(0,0,3,h);x.fillStyle='#0a0b0d';for(let k=0;k<3;k++){x.fillRect(11,10+k*40,10,14);}x.fillStyle='#1d1f24';x.fillRect(0,h-2,w,2);});
+T.vent=CT(256,256,(x,w,h)=>{x.fillStyle='#2b2e34';x.fillRect(0,0,w,h);x.fillStyle='#17181c';x.fillRect(8,8,w-16,h-16);x.fillStyle='#050506';for(let j=0;j<11;j++)for(let i=0;i<11;i++){x.beginPath();x.arc(26+i*20.4,26+j*20.4,6.6,0,7);x.fill();}x.strokeStyle='#4a4e57';x.lineWidth=3;x.strokeRect(2,2,w-4,h-4);});
+T.fan=CT(128,128,(x,w,h)=>{const c=w/2;x.fillStyle='#0b0c0e';x.fillRect(0,0,w,h);x.strokeStyle='#4a4e57';x.lineWidth=3;x.beginPath();x.arc(c,c,56,0,7);x.stroke();x.fillStyle='#3a3e46';for(let k=0;k<9;k++){const a=k/9*Math.PI*2;x.save();x.translate(c,c);x.rotate(a);x.beginPath();x.moveTo(8,-4);x.quadraticCurveTo(34,-26,52,-8);x.quadraticCurveTo(36,-6,8,6);x.closePath();x.fill();x.restore();}x.fillStyle='#1c1e23';x.beginPath();x.arc(c,c,13,0,7);x.fill();x.fillStyle='#5a5f69';x.beginPath();x.arc(c,c,5,0,7);x.fill();x.strokeStyle='#2a2d33';x.lineWidth=1.6;for(let k=1;k<=3;k++){x.beginPath();x.arc(c,c,k*17+20,0,7);x.stroke();}x.beginPath();x.moveTo(8,c);x.lineTo(w-8,c);x.moveTo(c,8);x.lineTo(c,h-8);x.stroke();});
 T.pcb=CT(512,512,(x,w,h)=>{const r=rng(5);x.fillStyle='#10291c';x.fillRect(0,0,w,h);x.strokeStyle='rgba(140,210,160,.16)';x.lineWidth=1.4;for(let i=0;i<260;i++){let px=r()*w,py=r()*h;x.beginPath();x.moveTo(px,py);const hz=r()<.5;px+=hz?(r()-.5)*160:0;py+=hz?0:(r()-.5)*160;x.lineTo(px,py);x.lineTo(px+(r()-.5)*40,py+(r()-.5)*40);x.stroke();}x.fillStyle='rgba(220,180,90,.5)';for(let i=0;i<300;i++)x.fillRect(r()*w,r()*h,2,2);});
 T.text=CT(512,96,(x,w,h)=>{x.fillStyle='rgba(0,0,0,0)';x.fillRect(0,0,w,h);x.font='700 46px "Exo 2", Arial, sans-serif';x.fillStyle='rgba(235,238,242,.85)';x.textBaseline='middle';x.fillText('INSTINCT  MI355X',20,50);x.fillStyle='#e8392a';x.fillRect(20,82,120,5);});
 T.sram=CT(64,64,(x)=>{x.fillStyle='#2a303c';x.fillRect(0,0,64,64);for(let i=0;i<8;i++)for(let j=0;j<8;j++){x.fillStyle=(i+j)%2?'#39414f':'#333a48';x.fillRect(i*8+1,j*8+1,6,6);x.fillStyle='#56607a';x.fillRect(i*8+3,j*8+2,2,4);}});
@@ -227,36 +247,62 @@ function finalize(o){o.mats=[];o.pmats=[];const seen=new Set();o.g.traverse(n=>{
 function bRack(){
   const g=new THREE.Group(),w=new THREE.Group();w.position.set(0,-4.5,-.8);g.add(w);
   const fl=new THREE.Mesh(new THREE.PlaneGeometry(44,44),S(0xffffff,.15,.55,{map:T.floor}));fl.rotation.x=-Math.PI/2;w.add(fl);
-  const frame=S(0x1d1f24,.6,.45),post=S(0x34373e,.75,.35),door=S(0xffffff,.55,.5,{map:T.door}),body=S(0x2e3137,.7,.38),front=S(0xffffff,.5,.48,{map:T.front}),sw=S(0x1a1c20,.4,.5);
-  const RW=2.5,RH=9.2,RD=5;
-  for(const rx of [-5.2,-2.6,0,2.6,5.2]){
+  const frame=S(0x1d1f24,.6,.45),post=S(0x34373e,.75,.35),door=S(0xffffff,.55,.5,{map:T.door}),body=S(0x2e3137,.7,.38),front=S(0xffffff,.5,.48,{map:T.front}),sw=S(0x1a1c20,.4,.5),
+    rail=S(0xffffff,.7,.4,{map:rep(T.rail,1,21.5)}),ear=S(0x3b3f47,.8,.35),hand=S(0x9aa0a8,.9,.3),trayM=S(0x4a4e57,.8,.4),vent=S(0xffffff,.5,.5,{map:T.vent});
+  const RW=2.5,RH=9.2,RD=5,RX=[-5.2,-2.6,0,2.6,5.2];
+  for(const rx of RX){
     bx(w,frame,.08,RH,RD,rx-RW/2+.04,RH/2,0);bx(w,frame,.08,RH,RD,rx+RW/2-.04,RH/2,0);
     bx(w,frame,RW,.14,RD,rx,RH-.07,0);bx(w,frame,RW,.55,RD,rx,.275,0);bx(w,frame,RW,RH,.06,rx,RH/2,-RD/2+.03);
-    if(rx!==0)bx(w,door,RW-.06,RH-.25,.05,rx,RH/2+.05,RD/2+.03);
+    for(const sx of [-1,1]){bx(w,rail,.1,RH-.7,.1,rx+sx*1.04,RH/2,RD/2-.2);bx(w,post,.1,RH-.7,.1,rx+sx*1.04,RH/2,-RD/2+.4);}
+    bx(w,frame,RW-.2,.34,.06,rx,8.62,RD/2-.2);
+    const pl=new THREE.Mesh(PLANE,new THREE.MeshBasicMaterial({map:CT(128,40,(x,ww,hh)=>{x.fillStyle='#0c0d0f';x.fillRect(0,0,ww,hh);x.fillStyle='#d9dce2';x.font='700 24px "Exo 2",Arial';x.textBaseline='middle';x.fillText('A-0'+(RX.indexOf(rx)+1),10,21);x.fillStyle='#e8392a';x.fillRect(ww-34,12,22,16);}),transparent:true}));pl.scale.set(.78,.24,1);pl.position.set(rx-.62,8.62,RD/2-.165);w.add(pl);
+    // cable bundles that arc over the front of the rack into the overhead tray
+    const cc=[0x2f6fe0,0xe0c02a,0xd9dce2,0x2f6fe0,0xe0c02a];
+    cc.forEach((c,k)=>{const x0=rx-.62+k*.31,dx=(k-2)*.06;tube(w,S(c,.1,.55),[[x0,7.72,RD/2+.02],[x0,8.0,RD/2+.3],[x0+dx,8.7,RD/2+.46],[x0+dx*2,9.5,RD/2+.1],[x0+dx*2,9.62,-.25]],.024);});
+    for(const sx of [-.9,.9])bx(w,post,.04,.42,.04,rx+sx,9.41,0);
   }
-  bx(w,post,.1,RH-.7,.1,-1.04,RH/2,RD/2-.2);bx(w,post,.1,RH-.7,.1,1.04,RH/2,RD/2-.2);
-  const NW=1.9,NH=.37,ND=2.85,zN=RD/2-.05-ND/2,nodes=[];
-  for(let i=0;i<16;i++){const n=new THREE.Group();n.position.set(0,1+i*.39+NH/2,zN);bx(n,body,NW,NH,ND);const f=new THREE.Mesh(PLANE,front);f.scale.set(NW,NH,1);f.position.z=ND/2+.003;n.add(f);w.add(n);nodes.push(n);}
-  for(let i=0;i<2;i++){const y=7.55+i*.24;bx(w,sw,NW,.19,2.2,0,y,RD/2-1.15);}
-  const sp=IM(w,BOX,S(0xffffff,.2,.4),48);let c=0;for(let i=0;i<2;i++)for(let j=0;j<24;j++){si(sp,c,-.85+j*.068,7.55+i*.24,RD/2-.04,.045,.06,.02);scol(sp,c,0x0c0d0f);c++;}
-  // pipes on the floor + vertical manifold behind
+  // overhead cable tray
+  for(const z of [-.62,.62])bx(w,trayM,13.6,.07,.06,0,9.63,z);
+  const rg=IM(w,BOX,trayM,36);for(let i=0;i<36;i++){si(rg,i,-6.65+i*.38,9.62,0,.05,.045,1.28);scol(rg,i,0xffffff);}
+  // open doors on the outer racks
+  [[-5.2,-1],[5.2,1]].forEach(([rx,sd],i)=>{
+    const hx=rx+sd*(RW/2-.03),piv=new THREE.Group();piv.position.set(hx,RH/2+.05,RD/2+.03);piv.rotation.y=sd*(1.72+i*.08);w.add(piv);
+    bx(piv,door,RW-.06,RH-.25,.05,-sd*(RW-.06)/2,0,0);
+    bx(piv,post,.05,1.9,.06,-sd*(RW-.2),.2,.06);bx(piv,hand,.035,.34,.035,-sd*(RW-.2),1.02,.1);
+    for(const hy of [-3.6,0,3.6])bx(piv,post,.07,.3,.08,-sd*.02,hy,0);});
+  // servers: 16 per rack. The 9th server of the middle rack slides out
+  const NW=1.9,NH=.37,ND=2.85,zN=RD/2-.05-ND/2,TI=8,yT=1+TI*.39+NH/2,SRV=[],hGeo=new THREE.TorusGeometry(.075,.011,6,14,Math.PI);hGeo.rotateZ(-Math.PI/2);hGeo.rotateY(-Math.PI/2);
+  RX.forEach((rx,ri)=>{for(let i=0;i<16;i++)SRV.push({rx,i,y:1+i*.39+NH/2,mv:ri===2&&i===TI});});
+  const stat=SRV.filter(o=>!o.mv),nsv=stat.length;
+  const bd=IM(w,BOX,body,nsv),fr=IM(w,PLANE,front,nsv),ea=IM(w,BOX,ear,nsv*2),hd=IM(w,hGeo,hand,nsv*2);
+  stat.forEach((o,k)=>{const v=.8+.2*((k*37)%11)/10;si(bd,k,o.rx,o.y,zN,NW,NH,ND);scol(bd,k,0xffffff,v);si(fr,k,o.rx,o.y,zN+ND/2+.003,NW,NH,1);scol(fr,k,0xffffff,v);
+    [-1,1].forEach((sg,q)=>{const m=k*2+q;si(ea,m,o.rx+sg*.9,o.y,zN+ND/2+.01,.1,NH,.02);scol(ea,m,0xffffff);si(hd,m,o.rx+sg*.9,o.y,zN+ND/2+.01,1,1,1);scol(hd,m,0xffffff);});});
+  const nodeG=new THREE.Group();nodeG.position.set(0,yT,zN);bx(nodeG,body,NW,NH,ND);const nf=new THREE.Mesh(PLANE,front);nf.scale.set(NW,NH,1);nf.position.z=ND/2+.003;nodeG.add(nf);
+  for(const sg of [-1,1]){bx(nodeG,ear,.1,NH,.02,sg*.9,0,ND/2+.01);const hm=new THREE.Mesh(hGeo,hand);hm.position.set(sg*.9,0,ND/2+.01);nodeG.add(hm);}
+  w.add(nodeG);
+  // switches on top of every rack
+  for(const rx of RX)for(let i=0;i<2;i++)bx(w,sw,NW,.19,2.2,rx,7.55+i*.24,RD/2-1.15);
+  const sp=IM(w,BOX,S(0xffffff,.2,.4),RX.length*48);let c=0;for(const rx of RX)for(let i=0;i<2;i++)for(let j=0;j<24;j++){si(sp,c,rx-.85+j*.068,7.55+i*.24,RD/2-.04,.045,.06,.02);scol(sp,c,0x0c0d0f);c++;}
+  // coolant manifold at the back + vented floor tiles in the cold aisle
   const blue=S(0x2a6fd6,.5,.35),red=S(0xd63b2a,.5,.35);
-  bx(w,blue,.12,7.4,.12,-.75,4.2,-RD/2+.22);bx(w,red,.12,7.4,.12,.75,4.2,-RD/2+.22);
-  const leds=PTS(w,16*3+4,.22),lp=leds.geometry.attributes.position.array;
-  for(let i=0;i<16;i++)for(let j=0;j<3;j++){const q=(i*3+j)*3;lp[q]=-.86+j*.07;lp[q+1]=1+i*.39+NH/2+.11;lp[q+2]=RD/2-.03;}
-  for(let j=0;j<4;j++){const q=(48+j)*3;lp[q]=.5+j*.08;lp[q+1]=7.55+(j%2)*.24;lp[q+2]=RD/2-.03;}
-  const TI=8,yT=1+TI*.39+NH/2;
+  for(const rx of RX){bx(w,blue,.12,7.4,.12,rx-.75,4.2,-RD/2+.22);bx(w,red,.12,7.4,.12,rx+.75,4.2,-RD/2+.22);
+    const vt=new THREE.Mesh(PLANE,vent);vt.rotation.x=-Math.PI/2;vt.scale.set(1.9,1.9,1);vt.position.set(rx,.006,RD/2+1.25);w.add(vt);}
+  // status LEDs: 3 per server + 4 per rack switch
+  const NL=SRV.length*3+RX.length*4,leds=PTS(w,NL,.2),lp=leds.geometry.attributes.position.array;
+  SRV.forEach((o,s)=>{for(let j=0;j<3;j++){const q=(s*3+j)*3;lp[q]=o.rx-.86+j*.07;lp[q+1]=o.y+.11;lp[q+2]=RD/2-.03;}});
+  RX.forEach((rx,ri)=>{for(let j=0;j<4;j++){const q=(SRV.length*3+ri*4+j)*3;lp[q]=rx+.5+j*.08;lp[q+1]=7.55+(j%2)*.24;lp[q+2]=RD/2-.03;}});
+  const TS=2*16+TI;
   return finalize({g,
     tc:[0,yT-4.5,zN+1.8-.8],
-    upd(k,t){const s=ease(sstep(.35,.72,k));nodes[TI].position.z=zN+1.8*s;
+    upd(k,t){const s=ease(sstep(.35,.72,k));nodeG.position.z=zN+1.8*s;
       const ca=leds.geometry.attributes.color.array;
-      for(let i=0;i<16;i++){for(let j=0;j<3;j++){const q=(i*3+j)*3,p=(i*3+j)*3;let r=0,gg=.9,b=.35;if(j===1){const on=Math.sin(t*9+i*3.1)>.3;r=0;gg=on?.55:.08;b=on?1:.1;}if(j===2){const on=Math.sin(t*4.3+i*1.7)*Math.sin(t*2.1+i)>.2;r=on?1:.12;gg=on?.25:.03;b=on?.15:.02;}ca[p]=r;ca[p+1]=gg;ca[p+2]=b;}
-        if(i===TI)for(let j=0;j<3;j++)lp[(i*3+j)*3+2]=RD/2-.03+1.8*s;}
-      for(let j=0;j<4;j++){const p=(48+j)*3,on=Math.sin(t*12+j*2)>0;ca[p]=.1;ca[p+1]=on?1:.2;ca[p+2]=.3;}
+      SRV.forEach((o,sI)=>{const i=sI;for(let j=0;j<3;j++){const p=(sI*3+j)*3;let r=0,gg=.9,b=.35;if(j===1){const on=Math.sin(t*9+i*3.1)>.3;r=0;gg=on?.55:.08;b=on?1:.1;}if(j===2){const on=Math.sin(t*4.3+i*1.7)*Math.sin(t*2.1+i)>.2;r=on?1:.12;gg=on?.25:.03;b=on?.15:.02;}ca[p]=r;ca[p+1]=gg;ca[p+2]=b;}});
+      for(let j=0;j<3;j++)lp[(TS*3+j)*3+2]=RD/2-.03+1.8*s;
+      for(let ri=0;ri<RX.length;ri++)for(let j=0;j<4;j++){const p=(SRV.length*3+ri*4+j)*3,on=Math.sin(t*12+j*2+ri)>0;ca[p]=.1;ca[p+1]=on?1:.2;ca[p+2]=.3;}
       leds.geometry.attributes.color.needsUpdate=true;leds.geometry.attributes.position.needsUpdate=true;},
     labels:[{p:[.95,yT-4.5+.2,zN+1.8-.8+1.42],t:'Узел 8× MI355X',s:'выдвигаем из стойки',k0:.6,d:'u'},
-            {p:[-1.1,8.9-4.5,RD/2-.8],t:'до 128 GPU в стойке',s:'жидкостное охлаждение',k0:.15,d:'u'}],
-    cam:{el:9,az:24,df:1.15}});
+            {p:[-1.1,7.7-4.5,RD/2-.8],t:'до 128 GPU в стойке',s:'жидкостное охлаждение',k0:.15,d:'u'}],
+    cam:{el:9,az:24,df:1.3}});
 }
 
 /* 1 — 8-GPU node (1 unit ≈ 4.5 cm) */
@@ -275,6 +321,10 @@ function bNode(){
     tube(g,hose,[[sx-.4,-.34,2.5],[sx-.4,.3,2.0],[sx-.4,.45,.6],[sx-.4,.45,.1]],.05);}
   const dm=IM(g,BOX,dimm,24);let c=0;for(const sx of [-2.4,2.4])for(const side of [-1,1])for(let j=0;j<6;j++){si(dm,c,sx+side*(1.25+j*.18),-.48,3.4,.07,.75,3.0);scol(dm,c,0xffffff);c++;}
   const nic=IM(g,BOX,S(0x9aa0a8,.85,.3),8);for(let i=0;i<8;i++){si(nic,i,-4.1+i*1.17,-.55,6.9,.9,.42,1.0);scol(nic,i,0xffffff);}
+  // fan wall between the CPUs and the NICs, plus chassis screws
+  const fanH=IM(g,BOX,S(0x1a1c20,.5,.45),8),fanP=IM(g,PLANE,S(0xffffff,.4,.5,{map:T.fan}),8),scr=IM(g,new THREE.CylinderGeometry(.09,.09,.05,8),S(0x9aa0a8,.9,.3),12);
+  for(let i=0;i<8;i++){const fx=-4.1+i*1.17;si(fanH,i,fx,-.45,5.55,1.05,.95,1.05);scol(fanH,i,0xffffff);scol(fanP,i,0xffffff);}
+  [[-4.7,-.9,-7.1],[4.7,-.9,-7.1],[-4.7,-.9,7.1],[4.7,-.9,7.1],[-4.7,-.9,0],[4.7,-.9,0]].forEach(([x,y,z],i)=>{si(scr,i,x,y+.04,z,1,1,1);scol(scr,i,0xffffff);si(scr,i+6,x*.9,y+.04,z*.93,1,1,1);scol(scr,i+6,0xffffff);});
   // Infinity Fabric mesh
   const links=[];for(let a=0;a<8;a++)for(let b=a+1;b<8;b++)links.push([a,b]);
   const arc=(a,b,u)=>{const A=gpu[a],B=gpu[b],len=Math.hypot(A[0]-B[0],A[1]-B[1]);return [lerp(A[0],B[0],u),.85+Math.sin(Math.PI*u)*(.25+len*.09),lerp(A[1],B[1],u)];};
@@ -283,7 +333,8 @@ function bNode(){
   const lm=new THREE.LineBasicMaterial({color:0xff5a44,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false});g.add(new THREE.LineSegments(lg,lm));
   const pul=PTS(g,links.length*2,.35,0xffb09a),pp=pul.geometry.attributes.position.array;
   return finalize({g,tc:[1.15,-.6,-1.7],
-    upd(k,t){const f=sstep(.18,.4,k);lm.userData.f=f;pul.material.userData.f=f;
+    upd(k,t){for(let i=0;i<8;i++)si(fanP,i,-4.1+i*1.17,.03,5.55,.95,.95,1,-Math.PI/2,0,t*(6+i*.4));fanP.instanceMatrix.needsUpdate=true;
+      const f=sstep(.18,.4,k);lm.userData.f=f;pul.material.userData.f=f;
       links.forEach(([a,b],i)=>{for(let j=0;j<2;j++){const u=(t*.45+i*.137+j*.5)%1,P=arc(a,b,j?1-u:u),q=(i*2+j)*3;pp[q]=P[0];pp[q+1]=P[1];pp[q+2]=P[2];}});pul.geometry.attributes.position.needsUpdate=true;},
     labels:[{p:[1.15,-.38,-1.0],t:'MI355X ×8',s:'модули OAM',k0:.15,d:'d'},
             {p:[-2.3,1.55,-3.6],t:'Infinity Fabric',s:'каждый GPU — с 7 соседями',k0:.4,d:'u'},
