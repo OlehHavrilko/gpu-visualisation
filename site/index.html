@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AMD Instinct MI355X — от стойки до атома</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#e7e8eb; --ink:#eceff3; --dim:#8f959f; --acc:#f2412f;
+  --fd:'Exo 2','Arial Narrow',system-ui,sans-serif;
+  --fb:'Golos Text','Segoe UI',system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --page:#000; } }
+:root[data-theme="dark"]{ --page:#000; }
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:var(--page)}
+body{height:100%;margin:0;background:var(--page);font-family:var(--fb);-webkit-font-smoothing:antialiased}
+#app{position:relative;height:100%;overflow:hidden;background:#08090b;color:var(--ink);user-select:none;-webkit-user-select:none}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:pointer}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lb{position:absolute;left:0;top:0;opacity:0;transition:opacity .45s}
+.lb .dt{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc)}
+.lb .ln{position:absolute;left:0;width:1px;background:rgba(255,255,255,.45)}
+.lb .bx{position:absolute;left:0;white-space:nowrap;background:rgba(9,10,13,.84);border:1px solid rgba(255,255,255,.16);border-radius:3px;padding:4px 7px 5px;line-height:1.2}
+.lb .bx b{display:block;font-weight:600;font-size:11.5px}
+.lb .bx i{display:block;font-style:normal;font-size:10.5px;color:var(--dim);margin-top:1px}
+.lb.u .ln{top:-30px;height:30px}.lb.u .bx{bottom:30px}
+.lb.d .ln{top:0;height:30px}.lb.d .bx{top:30px}
+#brk{position:absolute;left:0;top:0;width:10px;height:10px;pointer-events:none;opacity:0;transition:opacity .4s}
+#brk span{position:absolute;width:16px;height:16px;border-color:var(--acc);border-style:solid;border-width:0}
+#brk span:nth-child(1){left:0;top:0;border-left-width:2px;border-top-width:2px}
+#brk span:nth-child(2){right:0;top:0;border-right-width:2px;border-top-width:2px}
+#brk span:nth-child(3){right:0;bottom:0;border-right-width:2px;border-bottom-width:2px}
+#brk span:nth-child(4){left:0;bottom:0;border-left-width:2px;border-bottom-width:2px}
+.top{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;padding:18px 22px;pointer-events:none;gap:12px}
+.era .act{font-size:13px;color:var(--dim);font-weight:500}
+.era .sc{font-family:var(--fd);font-weight:800;font-size:clamp(28px,6vw,60px);line-height:1;margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.zm{text-align:right}
+.zm b{display:block;font-family:var(--fd);font-weight:700;font-size:clamp(17px,2.6vw,28px);color:var(--acc);font-variant-numeric:tabular-nums}
+.zm span{font-size:12px;color:var(--dim)}
+.ruler{position:absolute;right:20px;top:50%;transform:translateY(-62%);height:min(42vh,360px);width:60px;pointer-events:none}
+.ruler .ln{position:absolute;right:0;top:0;bottom:0;width:1px;background:rgba(255,255,255,.22)}
+.ruler .tk{position:absolute;right:0;width:6px;height:1px;background:rgba(255,255,255,.4)}
+.ruler .tlab{position:absolute;right:10px;font-size:10px;color:var(--dim);transform:translateY(-50%);white-space:nowrap;opacity:.8}
+.ruler .mk{position:absolute;right:-4px;width:9px;height:9px;border-radius:50%;background:var(--acc);transform:translateY(-50%);box-shadow:0 0 12px var(--acc)}
+.cap{position:absolute;left:24px;bottom:92px;width:min(calc(100% - 110px),620px);pointer-events:none;transition:opacity .3s}
+.cap.out{opacity:0}
+.cap h1{font-family:var(--fd);font-weight:800;font-size:clamp(18px,2.7vw,32px);margin:0;line-height:1.1;letter-spacing:.01em}
+.cap .s{margin-top:6px;font-weight:600;font-size:clamp(10.5px,1.2vw,13px);letter-spacing:.04em;color:var(--acc)}
+.cap .ru{margin:10px 0 0;font-size:clamp(14px,1.5vw,16.5px);line-height:1.45;max-width:58ch}
+.cap .d{margin:6px 0 0;font-size:clamp(12px,1.25vw,14px);line-height:1.5;color:var(--dim);max-width:62ch}
+.bar{position:absolute;left:0;right:0;bottom:0;padding:10px 18px 14px;display:flex;align-items:flex-end;gap:14px;background:linear-gradient(transparent,rgba(0,0,0,.7))}
+.ctl{display:flex;gap:4px}
+.ctl button{width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.09);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
+.ctl button:hover{background:rgba(255,255,255,.18)}
+.ctl button[aria-pressed="true"]{color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tline{flex:1;padding-top:16px;min-width:0}
+.segs{display:flex;gap:3px}
+.seg{flex:1;height:22px;border:0;padding:0;background:transparent;cursor:pointer;position:relative;min-width:0}
+.seg::before{content:'';position:absolute;left:0;right:0;top:9px;height:4px;border-radius:2px;background:rgba(255,255,255,.18)}
+.seg .f{position:absolute;left:0;top:9px;height:4px;border-radius:2px;background:var(--acc);width:0}
+.seg.done .f{width:100%;opacity:.5}
+.seg .y{position:absolute;bottom:100%;left:0;font-size:10.5px;color:var(--dim);white-space:nowrap;pointer-events:none}
+.seg.cur .y{color:var(--ink)}
+.intro{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at center,rgba(8,9,11,.45),rgba(8,9,11,.94));transition:opacity .6s}
+.intro.hide{opacity:0;pointer-events:none}
+.intro .in{text-align:center;padding:24px;max-width:660px}
+.intro h2{font-family:var(--fd);font-weight:800;font-size:clamp(32px,7.5vw,68px);margin:0;line-height:1}
+.intro h2 small{display:block;font-size:.42em;font-weight:500;color:var(--dim);margin-top:10px;letter-spacing:.02em}
+.intro p{color:var(--dim);font-size:clamp(14px,1.8vw,17px);line-height:1.5;margin:18px auto 28px;max-width:46ch}
+.intro button{font-family:var(--fd);font-weight:700;font-size:16px;padding:14px 30px;border-radius:999px;border:1px solid var(--acc);background:transparent;color:var(--ink);cursor:pointer}
+.intro button:hover{background:rgba(242,65,47,.12)}
+.intro .hint{font-size:12px;color:var(--dim);margin-top:18px}
+.err{color:var(--acc);margin-top:16px;font-size:14px}
+@media (max-width:620px){
+  .top{padding:14px 16px}
+  .ruler{right:8px;height:28vh;width:50px;transform:translateY(-75%)}
+  .ruler .tlab{font-size:9px}
+  .bar{padding:8px 10px 12px;gap:8px}
+  .ctl button{width:34px;height:34px}
+  .seg .y{display:none}
+  .cap{left:16px;bottom:72px;width:calc(100% - 32px)}
+  .lb .bx b{font-size:10.5px}.lb .bx i{font-size:9.5px}
+}
+@media (max-height:720px){ .cap .d{display:none} }
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="cv" role="img" aria-label="3D-разбор сервера AMD Instinct MI355X от стойки до атома кремния"></canvas>
+  <div id="labels"><div id="brk"><span></span><span></span><span></span><span></span></div></div>
+  <div class="top">
+    <div class="era"><div class="act" id="act"></div><div class="sc" id="scv"></div></div>
+    <div class="zm"><b id="zm">×1</b><span>приближение</span></div>
+  </div>
+  <div class="ruler" id="ruler" aria-hidden="true"><div class="ln"></div><div class="mk" id="mk"></div></div>
+  <div class="cap" id="cap" aria-live="polite">
+    <h1 id="capT"></h1><div class="s" id="capS"></div><div class="ru" id="capR"></div><div class="d" id="capD"></div>
+  </div>
+  <div class="bar">
+    <div class="ctl">
+      <button id="bPrev" aria-label="Предыдущая сцена"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="2" height="11" rx=".6" fill="currentColor"/><path d="M13 2.8v10.4L5.6 8z" fill="currentColor"/></svg></button>
+      <button id="bPlay" aria-label="Пуск"></button>
+      <button id="bNext" aria-label="Следующая сцена"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="11.5" y="2.5" width="2" height="11" rx=".6" fill="currentColor"/><path d="M3 2.8v10.4L10.4 8z" fill="currentColor"/></svg></button>
+      <button id="bSnd" aria-label="Звук" aria-pressed="false"></button>
+    </div>
+    <div class="tline"><div class="segs" id="segs"></div></div>
+  </div>
+  <div class="intro" id="intro">
+    <div class="in">
+      <h2>AMD Instinct MI355X<small>от серверной стойки до атома</small></h2>
+      <p>3D-разбор: стойка, узел на восемь GPU, модуль OAM, корпус с чиплетами, вычислительный блок, транзистор — и дальше, до одного атома кремния.</p>
+      <button id="bStart">Смотреть</button>
+      <div class="hint">Пробел — пауза · ← → — сцены · клик по шкале — переход</div>
+      <div class="err" id="err" hidden>WebGL недоступен в этом браузере — 3D-сцена не может запуститься.</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const sstep=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+const ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+const cv=$('#cv');
+let R;
+try{ if(!window.THREE) throw 0; R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true,powerPreference:'high-performance'}); }
+catch(e){ $('#err').hidden=false; $('#bStart').disabled=true; return; }
+R.outputEncoding=THREE.sRGBEncoding;
+R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=.74;
+R.setClearColor(0x000000,0);
+const SCN=new THREE.Scene();
+const CAM=new THREE.PerspectiveCamera(34,1,.05,800);
+
+/* ---------- environment & lights ---------- */
+{
+  const s=new THREE.Scene();
+  s.add(new THREE.Mesh(new THREE.BoxGeometry(30,14,30),new THREE.MeshBasicMaterial({color:0x17181c,side:THREE.BackSide})));
+  const pl=(w,h,x,y,z,rx,ry,c,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(c).multiplyScalar(i),side:THREE.DoubleSide}));m.position.set(x,y,z);m.rotation.set(rx,ry,0);s.add(m);};
+  pl(16,7,0,6.9,0,Math.PI/2,0,0xffffff,1.7);
+  pl(7,6,-14.9,3,2,0,Math.PI/2,0xc4d6ff,1.3);
+  pl(6,4,14.9,2,-4,0,-Math.PI/2,0xffd8bc,1.1);
+  pl(10,1.4,0,1.2,-14.9,0,0,0xff3b2a,.9);
+  pl(10,1,0,.6,14.9,0,Math.PI,0x9fb8ff,.8);
+  const pm=new THREE.PMREMGenerator(R);
+  SCN.environment=pm.fromScene(s,.035).texture;
+}
+SCN.add(new THREE.HemisphereLight(0xdfe6ff,0x15161a,.5));
+const L1=new THREE.DirectionalLight(0xffffff,1.5);L1.position.set(5,10,7);SCN.add(L1);
+const L2=new THREE.DirectionalLight(0xff6a50,.4);L2.position.set(-7,3,-5);SCN.add(L2);
+
+/* ---------- helpers ---------- */
+const BOX=new THREE.BoxGeometry(1,1,1), PLANE=new THREE.PlaneGeometry(1,1);
+function S(c,m=.1,r=.6,o={}){return new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:m,roughness:r,transparent:true,envMapIntensity:m>.6?1:.6},o));}
+function GL(c,op=1){return new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false});}
+function bx(p,mat,w,h,d,x=0,y=0,z=0){const m=new THREE.Mesh(BOX,mat);m.scale.set(w,h,d);m.position.set(x,y,z);p.add(m);return m;}
+function topM(side,top){return [side,side,top,side,side,side];}
+function IM(p,geo,mat,n){const m=new THREE.InstancedMesh(geo,mat,n);m.frustumCulled=false;p.add(m);return m;}
+const _o=new THREE.Object3D(),_c=new THREE.Color();
+function si(im,i,x,y,z,sx=1,sy=1,sz=1,rx=0,ry=0,rz=0){_o.position.set(x,y,z);_o.scale.set(sx,sy,sz);_o.rotation.set(rx,ry,rz);_o.updateMatrix();im.setMatrixAt(i,_o.matrix);}
+function scol(im,i,c,mul=1){_c.set(c).multiplyScalar(mul);im.setColorAt(i,_c);}
+function CT(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy());return t;}
+function rep(t,x,y){const n=t.clone();n.needsUpdate=true;n.wrapS=n.wrapT=THREE.RepeatWrapping;n.repeat.set(x,y);return n;}
+const GLOW=CT(64,64,(x)=>{const g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.22,'rgba(255,255,255,.6)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);});
+GLOW.encoding=THREE.LinearEncoding;
+function PTS(p,n,size,color=0xffffff){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3),3));g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(n*3).fill(1),3));
+  const m=new THREE.PointsMaterial({color,size,map:GLOW,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});m.userData.ps=size;const pt=new THREE.Points(g,m);pt.frustumCulled=false;p.add(pt);return pt;}
+function tube(p,mat,pts,r){const c=new THREE.CatmullRomCurve3(pts.map(a=>new THREE.Vector3(a[0],a[1],a[2])));const m=new THREE.Mesh(new THREE.TubeGeometry(c,24,r,8,false),mat);p.add(m);return m;}
+function logicTex(seed,base,cols,n,W=256,H=256,mx=18){return CT(W,H,(x,w,h)=>{const r=rng(seed);x.fillStyle=base;x.fillRect(0,0,w,h);for(let i=0;i<n;i++){x.fillStyle=cols[Math.floor(r()*cols.length)];x.globalAlpha=.3+r()*.5;x.fillRect(Math.floor(r()*w),Math.floor(r()*h),2+r()*mx,1+r()*4);}x.globalAlpha=1;});}
+const AMDR=0xf2412f;
+
+/* ---------- textures ---------- */
+const T={};
+T.floor=CT(256,256,(x,w,h)=>{x.fillStyle='#1a1c21';x.fillRect(0,0,w,h);const r=rng(3);for(let i=0;i<900;i++){x.fillStyle=`rgba(255,255,255,${r()*.03})`;x.fillRect(r()*w,r()*h,2,2);}x.strokeStyle='rgba(255,255,255,.08)';x.lineWidth=4;x.strokeRect(2,2,w-4,h-4);});
+T.floor.wrapS=T.floor.wrapT=THREE.RepeatWrapping;T.floor.repeat.set(16,16);
+T.door=CT(128,512,(x,w,h)=>{x.fillStyle='#24272d';x.fillRect(0,0,w,h);x.fillStyle='#0b0c0e';for(let j=0;j<85;j++)for(let i=0;i<21;i++){x.beginPath();x.arc(4+i*6+(j%2)*3,6+j*6,2,0,7);x.fill();}x.fillStyle='#33373e';x.fillRect(0,0,w,10);x.fillRect(0,h-10,w,10);x.fillRect(w-14,200,8,110);});
+T.front=CT(512,96,(x,w,h)=>{x.fillStyle='#2c2f35';x.fillRect(0,0,w,h);for(let i=0;i<4;i++){x.fillStyle='#17191d';x.fillRect(10+i*34,10,30,76);x.fillStyle='#3a3e46';x.fillRect(14+i*34,14,22,4);}
+  x.fillStyle='#0c0d0f';for(let j=0;j<9;j++)for(let i=0;i<46;i++){x.beginPath();x.arc(160+i*6.6+(j%2)*3.3,10+j*9.5,2.3,0,7);x.fill();}x.fillStyle='#1d2024';x.fillRect(478,14,24,68);x.fillStyle='#b8241a';x.fillRect(150,44,3,10);});
+T.pcb=CT(512,512,(x,w,h)=>{const r=rng(5);x.fillStyle='#10291c';x.fillRect(0,0,w,h);x.strokeStyle='rgba(140,210,160,.16)';x.lineWidth=1.4;for(let i=0;i<260;i++){let px=r()*w,py=r()*h;x.beginPath();x.moveTo(px,py);const hz=r()<.5;px+=hz?(r()-.5)*160:0;py+=hz?0:(r()-.5)*160;x.lineTo(px,py);x.lineTo(px+(r()-.5)*40,py+(r()-.5)*40);x.stroke();}x.fillStyle='rgba(220,180,90,.5)';for(let i=0;i<300;i++)x.fillRect(r()*w,r()*h,2,2);});
+T.text=CT(512,96,(x,w,h)=>{x.fillStyle='rgba(0,0,0,0)';x.fillRect(0,0,w,h);x.font='700 46px "Exo 2", Arial, sans-serif';x.fillStyle='rgba(235,238,242,.85)';x.textBaseline='middle';x.fillText('INSTINCT  MI355X',20,50);x.fillStyle='#e8392a';x.fillRect(20,82,120,5);});
+T.sram=CT(64,64,(x)=>{x.fillStyle='#2a303c';x.fillRect(0,0,64,64);for(let i=0;i<8;i++)for(let j=0;j<8;j++){x.fillStyle=(i+j)%2?'#39414f':'#333a48';x.fillRect(i*8+1,j*8+1,6,6);x.fillStyle='#56607a';x.fillRect(i*8+3,j*8+2,2,4);}});
+T.logicA=logicTex(11,'#2a2c38',['#454a60','#3a3f52','#5a5f78','#6a4a52'],1400);
+T.logicB=logicTex(17,'#272b33',['#3d4555','#4a5266','#35404c'],1600);
+T.pkgTop=CT(512,436,(x,w,h)=>{const X=v=>(v+4)/8*w,Z=v=>(v+3.4)/6.8*h;x.fillStyle='#5d636f';x.fillRect(0,0,w,h);
+  for(const zc of [-1.55,1.55]){x.fillStyle='#2b3039';x.fillRect(X(-2.1),Z(zc-1.5),X(2.1)-X(-2.1),Z(1.5)-Z(-1.5));
+    for(const xc of [-.9,.9])for(const dz of [-.66,.66]){x.fillStyle='#3c3b52';const x0=X(xc-.83),z0=Z(zc+dz-.575),ww=X(.83)-X(-.83),hh=Z(.575)-Z(-.575);x.fillRect(x0,z0,ww,hh);x.strokeStyle='#55546f';x.lineWidth=1;for(let i=1;i<9;i++){x.beginPath();x.moveTo(x0+ww*i/9,z0);x.lineTo(x0+ww*i/9,z0+hh);x.stroke();}}}
+  for(const xc of [-3.05,3.05])for(const zc of [-2.55,-.85,.85,2.55]){x.fillStyle='#1b1c21';x.fillRect(X(xc-.675),Z(zc-.75),X(.675)-X(-.675),Z(.75)-Z(-.75));x.fillStyle='#2c2e36';x.fillRect(X(xc-.6),Z(zc-.7),X(.6)-X(-.6),6);}});
+T.xcdTop=CT(256,178,(x,w,h)=>{x.fillStyle='#33334a';x.fillRect(0,0,w,h);const rows=[-2.78,-1.62,1.62,2.78];for(const rz of rows)for(let i=0;i<9;i++){const px=(i*1.08+.18)/10*w,pz=(rz-.54+3.47)/6.94*h;x.fillStyle='#46465f';x.fillRect(px,pz,.98/10*w,1.08/6.94*h);x.strokeStyle='#5c5c7c';x.strokeRect(px+.5,pz+.5,.98/10*w-1,1.08/6.94*h-1);}
+  x.fillStyle='#3a4152';x.fillRect(.18/10*w,(3.47-.75)/6.94*h,9.64/10*w,1.5/6.94*h);});
+T.iod=CT(256,184,(x,w,h)=>{const r=rng(9);x.fillStyle='#262b34';x.fillRect(0,0,w,h);for(let b=0;b<6;b++){const bx0=10+(b%3)*82,bz0=12+Math.floor(b/3)*86;x.fillStyle='#343c4a';x.fillRect(bx0,bz0,72,74);x.strokeStyle='rgba(120,140,170,.25)';for(let i=0;i<72;i+=4){x.beginPath();x.moveTo(bx0+i,bz0);x.lineTo(bx0+i,bz0+74);x.stroke();}}for(let i=0;i<300;i++){x.fillStyle=`rgba(140,150,180,${r()*.25})`;x.fillRect(r()*w,r()*h,r()*8,2);}});
+T.cu=CT(128,140,(x,w,h)=>{x.fillStyle='#3a3a50';x.fillRect(0,0,w,h);for(const qx of [6,74])for(const qz of [6,74]){x.fillStyle='#4b5268';x.fillRect(qx,qz,48,18);x.fillStyle='#55566f';x.fillRect(qx,qz+21,48,14);x.fillStyle='#6d4950';x.fillRect(qx,qz+38,48,20);}x.fillStyle='#4b5268';x.fillRect(57,30,14,80);});
+T.mc=CT(256,136,(x,w,h)=>{x.fillStyle='#2a1e22';x.fillRect(0,0,w,h);for(let i=0;i<15;i++)for(let j=0;j<8;j++){x.fillStyle='#5c3a40';x.fillRect(14+i*15.2,8+j*15.2,13,13);x.fillStyle='#7a4c52';x.fillRect(16+i*15.2,10+j*15.2,9,2);}x.fillStyle='#463036';x.fillRect(2,6,8,124);x.fillRect(14,0,230,5);});
+T.lane=CT(128,64,(x,w,h)=>{x.fillStyle='#2e3040';x.fillRect(0,0,w,h);for(let i=0;i<8;i++)for(let j=0;j<2;j++){x.fillStyle='#4e5068';x.fillRect(4+i*15.5,6+j*29,12,24);x.fillStyle='#62657e';x.fillRect(6+i*15.5,9+j*29,8,3);}});
+T.mac=CT(128,128,(x,w,h)=>{x.fillStyle='#4a4d55';x.fillRect(0,0,w,h);for(let r=0;r<8;r++){const y=r*16;x.fillStyle='#6f737c';x.fillRect(0,y+3,w,2);x.fillRect(0,y+11,w,2);x.fillStyle='#a8754a';x.fillRect(0,y,w,1.5);for(let i=0;i<w;i+=4){x.fillStyle='#8a8f99';x.fillRect(i,y+2,1.4,12);}}});
+
+/* ---------- scene builders (each spans ~10 units, centered at origin) ---------- */
+function finalize(o){o.mats=[];o.pmats=[];const seen=new Set();o.g.traverse(n=>{if(!n.material)return;(Array.isArray(n.material)?n.material:[n.material]).forEach(m=>{if(seen.has(m))return;seen.add(m);m.userData.bo=m.opacity;o.mats.push(m);if(m.isPointsMaterial)o.pmats.push(m);});});o.g.visible=false;SCN.add(o.g);return o;}
+
+/* 0 — rack row (1 unit ≈ 0.24 m) */
+function bRack(){
+  const g=new THREE.Group(),w=new THREE.Group();w.position.set(0,-4.5,-.8);g.add(w);
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(44,44),S(0xffffff,.15,.55,{map:T.floor}));fl.rotation.x=-Math.PI/2;w.add(fl);
+  const frame=S(0x1d1f24,.6,.45),post=S(0x34373e,.75,.35),door=S(0xffffff,.55,.5,{map:T.door}),body=S(0x2e3137,.7,.38),front=S(0xffffff,.5,.48,{map:T.front}),sw=S(0x1a1c20,.4,.5);
+  const RW=2.5,RH=9.2,RD=5;
+  for(const rx of [-5.2,-2.6,0,2.6,5.2]){
+    bx(w,frame,.08,RH,RD,rx-RW/2+.04,RH/2,0);bx(w,frame,.08,RH,RD,rx+RW/2-.04,RH/2,0);
+    bx(w,frame,RW,.14,RD,rx,RH-.07,0);bx(w,frame,RW,.55,RD,rx,.275,0);bx(w,frame,RW,RH,.06,rx,RH/2,-RD/2+.03);
+    if(rx!==0)bx(w,door,RW-.06,RH-.25,.05,rx,RH/2+.05,RD/2+.03);
+  }
+  bx(w,post,.1,RH-.7,.1,-1.04,RH/2,RD/2-.2);bx(w,post,.1,RH-.7,.1,1.04,RH/2,RD/2-.2);
+  const NW=1.9,NH=.37,ND=2.85,zN=RD/2-.05-ND/2,nodes=[];
+  for(let i=0;i<16;i++){const n=new THREE.Group();n.position.set(0,1+i*.39+NH/2,zN);bx(n,body,NW,NH,ND);const f=new THREE.Mesh(PLANE,front);f.scale.set(NW,NH,1);f.position.z=ND/2+.003;n.add(f);w.add(n);nodes.push(n);}
+  for(let i=0;i<2;i++){const y=7.55+i*.24;bx(w,sw,NW,.19,2.2,0,y,RD/2-1.15);}
+  const sp=IM(w,BOX,S(0xffffff,.2,.4),48);let c=0;for(let i=0;i<2;i++)for(let j=0;j<24;j++){si(sp,c,-.85+j*.068,7.55+i*.24,RD/2-.04,.045,.06,.02);scol(sp,c,0x0c0d0f);c++;}
+  // pipes on the floor + vertical manifold behind
+  const blue=S(0x2a6fd6,.5,.35),red=S(0xd63b2a,.5,.35);
+  bx(w,blue,.12,7.4,.12,-.75,4.2,-RD/2+.22);bx(w,red,.12,7.4,.12,.75,4.2,-RD/2+.22);
+  const leds=PTS(w,16*3+4,.22),lp=leds.geometry.attributes.position.array;
+  for(let i=0;i<16;i++)for(let j=0;j<3;j++){const q=(i*3+j)*3;lp[q]=-.86+j*.07;lp[q+1]=1+i*.39+NH/2+.11;lp[q+2]=RD/2-.03;}
+  for(let j=0;j<4;j++){const q=(48+j)*3;lp[q]=.5+j*.08;lp[q+1]=7.55+(j%2)*.24;lp[q+2]=RD/2-.03;}
+  const TI=8,yT=1+TI*.39+NH/2;
+  return finalize({g,
+    tc:[0,yT-4.5,zN+1.8-.8],
+    upd(k,t){const s=ease(sstep(.35,.72,k));nodes[TI].position.z=zN+1.8*s;
+      const ca=leds.geometry.attributes.color.array;
+      for(let i=0;i<16;i++){for(let j=0;j<3;j++){const q=(i*3+j)*3,p=(i*3+j)*3;let r=0,gg=.9,b=.35;if(j===1){const on=Math.sin(t*9+i*3.1)>.3;r=0;gg=on?.55:.08;b=on?1:.1;}if(j===2){const on=Math.sin(t*4.3+i*1.7)*Math.sin(t*2.1+i)>.2;r=on?1:.12;gg=on?.25:.03;b=on?.15:.02;}ca[p]=r;ca[p+1]=gg;ca[p+2]=b;}
+        if(i===TI)for(let j=0;j<3;j++)lp[(i*3+j)*3+2]=RD/2-.03+1.8*s;}
+      for(let j=0;j<4;j++){const p=(48+j)*3,on=Math.sin(t*12+j*2)>0;ca[p]=.1;ca[p+1]=on?1:.2;ca[p+2]=.3;}
+      leds.geometry.attributes.color.needsUpdate=true;leds.geometry.attributes.position.needsUpdate=true;},
+    labels:[{p:[.95,yT-4.5+.2,zN+1.8-.8+1.42],t:'Узел 8× MI355X',s:'выдвигаем из стойки',k0:.6,d:'u'},
+            {p:[-1.1,8.9-4.5,RD/2-.8],t:'до 128 GPU в стойке',s:'жидкостное охлаждение',k0:.15,d:'u'}],
+    cam:{el:9,az:24,df:1.15}});
+}
+
+/* 1 — 8-GPU node (1 unit ≈ 4.5 cm) */
+function bNode(){
+  const g=new THREE.Group();
+  const sheet=S(0x3a3e45,.75,.35),pcb=S(0xffffff,.2,.55,{map:T.pcb}),cu=S(0xc47f4c,1,.32),nick=S(0xa2a8b0,.9,.28),blk=S(0x141619,.3,.55),hose=S(0x121315,.15,.65),blue=S(0x2a6fd6,.5,.35),red=S(0xd63b2a,.5,.35),dimm=S(0x1d3a2b,.3,.5),acc=S(AMDR,.3,.4,{emissive:AMDR,emissiveIntensity:.4});
+  bx(g,sheet,10,.06,15,0,-.94,0);bx(g,sheet,.06,1.9,15,-4.97,0,0);bx(g,sheet,.06,1.9,15,4.97,0,0);bx(g,sheet,10,1.9,.06,0,0,7.47);bx(g,sheet,10,1.9,.06,0,0,-7.47);
+  bx(g,pcb,9.7,.06,7,0,-.88,3.9);bx(g,pcb,9.7,.08,7.6,0,-.87,-3.6);
+  const xs=[-3.45,-1.15,1.15,3.45],zs=[-5.4,-1.7],gpu=[];
+  bx(g,blue,9.4,.18,.18,0,.35,-7.0);bx(g,red,9.4,.18,.18,0,.35,-6.65);
+  for(const z of zs)for(const x of xs){const m=new THREE.Group();m.position.set(x,0,z);
+    bx(m,pcb,2.2,.06,3.55,0,-.78,0);bx(m,cu,1.7,.22,2.3,0,-.64,0);bx(m,nick,1.8,.16,2.5,0,-.47,0);bx(m,acc,.9,.01,.05,0,-.385,.95);
+    bx(m,blk,.22,.2,.22,-.45,-.29,-1.0);bx(m,blk,.22,.2,.22,.45,-.29,-1.0);g.add(m);gpu.push([x,z]);
+    for(const [dx,mz] of [[-.45,-7.0],[.45,-6.65]])tube(g,hose,[[x+dx,-.2,z-1],[x+dx,.25,z-1],[x+dx,.55,(z-1+mz)/2],[x+dx*1.4,.42,mz+.25],[x+dx*1.4,.35,mz]],.055);}
+  for(const sx of [-2.4,2.4]){bx(g,blk,2.1,.12,2.5,sx,-.8,3.4);bx(g,cu,1.6,.3,1.9,sx,-.6,3.4);bx(g,nick,1.7,.12,2.0,sx,-.4,3.4);
+    tube(g,hose,[[sx-.4,-.34,2.5],[sx-.4,.3,2.0],[sx-.4,.45,.6],[sx-.4,.45,.1]],.05);}
+  const dm=IM(g,BOX,dimm,24);let c=0;for(const sx of [-2.4,2.4])for(const side of [-1,1])for(let j=0;j<6;j++){si(dm,c,sx+side*(1.25+j*.18),-.48,3.4,.07,.75,3.0);scol(dm,c,0xffffff);c++;}
+  const nic=IM(g,BOX,S(0x9aa0a8,.85,.3),8);for(let i=0;i<8;i++){si(nic,i,-4.1+i*1.17,-.55,6.9,.9,.42,1.0);scol(nic,i,0xffffff);}
+  // Infinity Fabric mesh
+  const links=[];for(let a=0;a<8;a++)for(let b=a+1;b<8;b++)links.push([a,b]);
+  const arc=(a,b,u)=>{const A=gpu[a],B=gpu[b],len=Math.hypot(A[0]-B[0],A[1]-B[1]);return [lerp(A[0],B[0],u),.85+Math.sin(Math.PI*u)*(.25+len*.09),lerp(A[1],B[1],u)];};
+  const lpos=[];for(const [a,b] of links)for(let i=0;i<14;i++){lpos.push(...arc(a,b,i/14),...arc(a,b,(i+1)/14));}
+  const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(lpos,3));
+  const lm=new THREE.LineBasicMaterial({color:0xff5a44,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false});g.add(new THREE.LineSegments(lg,lm));
+  const pul=PTS(g,links.length*2,.35,0xffb09a),pp=pul.geometry.attributes.position.array;
+  return finalize({g,tc:[1.15,-.6,-1.7],
+    upd(k,t){const f=sstep(.18,.4,k);lm.userData.f=f;pul.material.userData.f=f;
+      links.forEach(([a,b],i)=>{for(let j=0;j<2;j++){const u=(t*.45+i*.137+j*.5)%1,P=arc(a,b,j?1-u:u),q=(i*2+j)*3;pp[q]=P[0];pp[q+1]=P[1];pp[q+2]=P[2];}});pul.geometry.attributes.position.needsUpdate=true;},
+    labels:[{p:[1.15,-.38,-1.0],t:'MI355X ×8',s:'модули OAM',k0:.15,d:'d'},
+            {p:[-2.3,1.55,-3.6],t:'Infinity Fabric',s:'каждый GPU — с 7 соседями',k0:.4,d:'u'},
+            {p:[-2.4,-.34,3.4],t:'CPU ×2',s:'хост-процессоры',k0:.2,d:'u'},
+            {p:[3.6,.35,-6.82],t:'контур охлаждения',s:'жидкость к каждому GPU',k0:.3,d:'u'}],
+    cam:{el:56,az:20,df:1.06}});
+}
+
+/* 2 — OAM module (1 unit ≈ 1.65 cm) */
+function bOAM(){
+  const g=new THREE.Group();
+  const pcb=S(0xffffff,.2,.55,{map:rep(T.pcb,1,1.6)}),sub=S(0x353b30,.15,.55),side=S(0x5d636f,.9,.22),top=S(0xffffff,.55,.3,{map:T.pkgTop}),stf=S(0x8c9198,.85,.3),gold=S(0xd2a64a,1,.3),blk=S(0x151619,.3,.5),ind=S(0x5b5f66,.6,.45);
+  bx(g,pcb,6,.17,9.7,0,-.49,0);
+  bx(g,sub,4.6,.12,4.6,0,-.345,0);
+  const ip=new THREE.Mesh(BOX,topM(side,top));ip.scale.set(3.68,.06,3.13);ip.position.set(0,-.255,0);g.add(ip);
+  for(const [w,d,x,z] of [[5.4,.3,0,2.55],[5.4,.3,0,-2.55],[.3,4.8,2.55,0],[.3,4.8,-2.55,0]])bx(g,stf,w,.12,d,x,-.36,z);
+  const caps=IM(g,BOX,gold,160);const r=rng(21);for(let i=0;i<160;i++){let x,z;do{x=(r()-.5)*5.6;z=(r()-.5)*8.8;}while(Math.abs(x)<2.8&&Math.abs(z)<2.8||Math.abs(z)>3.3&&Math.abs(z)<4.6&&Math.abs(x)<2.7);si(caps,i,x,-.38,z,.13,.06,.07,0,r()<.5?0:Math.PI/2);scol(caps,i,r()<.3?0x2a2b2e:0xffffff);}
+  const vr=IM(g,BOX,blk,32),iv=IM(g,BOX,ind,16);let c=0,ci=0;for(const zc of [-3.95,3.95])for(let i=0;i<8;i++){si(vr,c,-2.45+i*.7,-.35,zc-.3,.44,.1,.36);scol(vr,c,0xffffff);c++;si(vr,c,-2.45+i*.7,-.35,zc+.3,.44,.1,.36);scol(vr,c,0xffffff);c++;si(iv,ci,-2.45+i*.7,-.25,zc+(zc>0?.85:-.85),.5,.32,.5);scol(iv,ci,0xffffff);ci++;}
+  const cp=new THREE.Group();g.add(cp);
+  const cu=S(0xc47f4c,1,.3),nk=S(0xa2a8b0,.9,.26),fit=S(0x141619,.3,.5),txt=new THREE.MeshBasicMaterial({map:T.text,transparent:true,depthWrite:false});
+  bx(cp,cu,4.63,.45,6.27,0,.0,0);bx(cp,nk,4.9,.4,6.8,0,.42,0);
+  for(const x of [-1.2,1.2]){const f=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.4,20),fit);f.position.set(x,.82,-2.6);cp.add(f);}
+  const tp=new THREE.Mesh(PLANE,txt);tp.rotation.x=-Math.PI/2;tp.scale.set(3.6,.68,1);tp.position.set(0,.625,1.6);cp.add(tp);
+  const cpm=[cu,nk,fit,txt];
+  return finalize({g,tc:[0,-.29,0],
+    upd(k,t){const l=ease(sstep(.1,.5,k));cp.position.y=l*3.6;cp.position.z=-l*1.2;cp.rotation.x=-l*.22;cp.rotation.z=l*.08;const f=1-sstep(.38,.6,k);cpm.forEach(m=>m.userData.f=f);cp.visible=f>.01;},
+    labels:[{p:[0,-.22,0],t:'Корпус MI355X',s:'185 млрд транзисторов',k0:.55,d:'u'},
+            {p:[2.0,-.25,3.95],t:'VRM',s:'питание до 1400 Вт',k0:.62,d:'d'},
+            {p:[-2.55,-.3,1.0],t:'рамка жёсткости',s:'держит корпус ровно',k0:.68,d:'u'}],
+    cam:{el:52,az:24,df:.95}});
+}
+
+/* 3 — package (1 unit ≈ 7.6 mm) */
+function bPkg(){
+  const g=new THREE.Group();
+  const sub=S(0x384034,.15,.55),gold=S(0xd2a64a,1,.3),ipm=S(0x6a707c,.92,.2),side=S(0x40444f,.6,.4),iodTop=S(0xffffff,.55,.3,{map:T.iod}),xTop=S(0xffffff,.5,.28,{map:T.xcdTop}),hbmL=S(0x24252b,.5,.35),hbmTop=S(0x1a1b20,.4,.4);
+  bx(g,sub,10,.26,10,0,-.12,0);
+  const caps=IM(g,BOX,gold,130),r=rng(8);for(let i=0;i<130;i++){let x,z;do{x=(r()-.5)*9.4;z=(r()-.5)*9.4;}while(Math.abs(x)<4.3&&Math.abs(z)<3.7);si(caps,i,x,.04,z,.24,.1,.13,0,r()<.5?0:Math.PI/2);scol(caps,i,0xffffff);}
+  bx(g,ipm,8,.08,6.8,0,.05,0);
+  for(const zc of [-1.55,1.55]){const m=new THREE.Mesh(BOX,topM(side,iodTop));m.scale.set(4.2,.1,3);m.position.set(0,.14,zc);g.add(m);}
+  const xcds=[];for(const zc of [-1.55,1.55])for(const xc of [-.9,.9])for(const dz of [-.66,.66]){const m=new THREE.Mesh(BOX,topM(side,xTop));m.scale.set(1.66,.08,1.15);m.position.set(xc,.23,zc+dz);g.add(m);xcds.push(m);}
+  const hp=[];for(const xc of [-3.05,3.05])for(const zc of [-2.55,-.85,.85,2.55])hp.push([xc,zc]);
+  hp.forEach(([x,z])=>bx(g,side,1.35,.04,1.5,x,.11,z));
+  const lay=IM(g,BOX,hbmL,96);for(let i=0;i<96;i++)scol(lay,i,i%12===11?0x6c7280:(i%2?0xffffff:0xcfd3dc));
+  const caps2=IM(g,BOX,hbmTop,8);for(let i=0;i<8;i++)scol(caps2,i,0xffffff);
+  const bond=PTS(g,8*48,.11,0xff6a50),bp=bond.geometry.attributes.position.array;
+  xcds.forEach((m,i)=>{for(let a=0;a<8;a++)for(let b=0;b<6;b++){const q=(i*48+a*6+b)*3;bp[q]=m.position.x-.7+a*.2;bp[q+1]=.2;bp[q+2]=m.position.z-.48+b*.19;}});
+  bond.geometry.attributes.position.needsUpdate=true;
+  return finalize({g,tc:[.9,1.33,2.21],
+    upd(k,t){xcds.forEach((m,i)=>{const l=ease(sstep(.12+i*.025,.45+i*.025,k));m.position.y=.23+1.1*l;});
+      const gp=lerp(.016,.075,ease(sstep(.25,.6,k)));
+      hp.forEach(([x,z],s)=>{for(let i=0;i<12;i++)si(lay,s*12+i,x,.139+i*gp,z,1.33,.012,1.48);si(caps2,s,x,.139+12*gp+.02,z,1.35,.04,1.5);});
+      lay.instanceMatrix.needsUpdate=true;caps2.instanceMatrix.needsUpdate=true;
+      bond.material.userData.f=sstep(.2,.45,k)*(.65+.35*Math.sin(t*3));},
+    labels:[{p:[-.9,1.37,-2.21],t:'XCD ×8',s:'TSMC N3P · стоят на IOD',k0:.5,d:'u'},
+            {p:[-1.6,.19,-.4],t:'IOD ×2',s:'N6 · 256 МБ Infinity Cache',k0:.55,d:'d'},
+            {p:[3.05,.6,-2.55],t:'HBM3E 12-Hi ×8',s:'36 ГБ на стек',k0:.6,d:'u'},
+            {p:[-3.9,.09,3.1],t:'интерпозер',s:'2,5D-связь с памятью',k0:.66,d:'d'}],
+    cam:{el:44,az:32,df:.92}});
+}
+
+/* 4 — one XCD (1 unit ≈ 1.26 mm) */
+function bXCD(){
+  const g=new THREE.Group();
+  const side=S(0x3a3d48,.6,.4),top=S(0xffffff,.45,.32,{map:rep(T.logicA,3,2)}),cuM=S(0xffffff,.45,.3,{map:T.cu}),l2M=S(0xffffff,.5,.3,{map:rep(T.sram,40,6)}),dsp=S(0xffffff,.4,.35,{map:T.logicB}),pad=S(0xd2a64a,1,.3);
+  const d=new THREE.Mesh(BOX,topM(side,top));d.scale.set(10,.48,6.94);g.add(d);
+  const rows=[-2.78,-1.62,1.62,2.78],OFF=[3,14,22,33],cu=IM(g,BOX,cuM,36),gl=IM(g,BOX,GL(0xffffff,1),36),pos=[];
+  for(let r=0;r<4;r++)for(let i=0;i<9;i++){const n=r*9+i,x=-4.32+i*1.08,z=rows[r];pos.push([x,z]);si(cu,n,x,.27,z,.98,.06,1.08);scol(cu,n,OFF.includes(n)?0x2a2a30:0xb8b8c4);si(gl,n,x,.302,z,.98,.004,1.08);scol(gl,n,0x000000);}
+  bx(g,l2M,3.9,.05,1.5,-2.87,.265,0);bx(g,l2M,3.9,.05,1.5,2.87,.265,0);bx(g,dsp,1.7,.07,1.5,0,.275,0);
+  const pd=IM(g,BOX,pad,180);let c=0;for(let i=0;i<50;i++){si(pd,c++,-4.9+i*.2,.245,3.38,.08,.01,.08);si(pd,c++,-4.9+i*.2,.245,-3.38,.08,.01,.08);}for(let i=0;i<40&&c<180;i++){si(pd,c++,4.9,.245,-3.2+i*.165,.08,.01,.08);if(c<180)si(pd,c++,-4.9,.245,-3.2+i*.165,.08,.01,.08);}for(let i=0;i<180;i++)scol(pd,i,0xffffff);
+  const TI=13,red=new THREE.Color(AMDR);
+  return finalize({g,tc:[0,.27,-1.62],
+    upd(k,t){for(let n=0;n<36;n++){let v=0;if(!OFF.includes(n)){v=Math.max(0,Math.sin(t*1.6+n*2.39)*Math.sin(t*.83+n*1.31));v*=.32;}if(n===TI)v=Math.max(v,sstep(.55,.75,k)*(.7+.25*Math.sin(t*4)));_c.copy(red).multiplyScalar(v);gl.setColorAt(n,_c);}gl.instanceColor.needsUpdate=true;},
+    labels:[{p:[-4.32,.3,-2.78],t:'Compute Unit',s:'32 активных + 4 резерв',k0:.15,d:'u'},
+            {p:[-4.32+3*1.08,.3,-2.78],t:'резервный CU',s:'отключён',k0:.3,d:'u'},
+            {p:[2.87,.29,0],t:'L2-кэш',s:'4 МБ на XCD',k0:.25,d:'d'}],
+    cam:{el:56,az:16,df:.9}});
+}
+
+/* 5 — one compute unit (1 unit ≈ 0.14 mm) */
+function bCU(){
+  const g=new THREE.Group();
+  const side=S(0x34363f,.6,.4),base=S(0xffffff,.4,.35,{map:rep(T.logicB,3,3)}),sram=S(0xffffff,.5,.3,{map:rep(T.sram,10,4)}),lds=S(0xffffff,.5,.3,{map:rep(T.sram,6,10)}),lane=S(0xffffff,.45,.32,{map:T.lane}),mc=S(0xffffff,.45,.3,{map:T.mc}),lg=S(0xffffff,.4,.35,{map:T.logicA}),lg2=S(0xffffff,.4,.35,{map:rep(T.logicB,1,1)});
+  const d=new THREE.Mesh(BOX,topM(side,base));d.scale.set(8.9,.5,9.8);g.add(d);
+  bx(g,lg,2.0,.12,1.5,0,.31,-3.95);bx(g,lg2,2.0,.12,1.3,0,.31,-2.35);bx(g,lds,2.0,.14,4.1,0,.32,.55);bx(g,lg2,2.0,.12,1.9,0,.31,3.75);
+  const mcs=[],glow=GL(0xffffff,1),gl=IM(g,BOX,glow,4);let gi=0;
+  for(const sx of [-1,1])for(const sz of [-1,1]){const xc=sx*2.725;
+    const zV=sz*3.975,zL=sz*2.525,zM=sz*.95;
+    bx(g,sram,3.15,.13,1.45,xc,.315,zV);bx(g,lane,3.15,.12,1.15,xc,.31,zL);bx(g,mc,3.15,.14,1.7,xc,.32,zM);mcs.push([xc,zM]);si(gl,gi,xc,.393,zM,3.15,.004,1.7);scol(gl,gi,0);gi++;}
+  const pk=PTS(g,4*14+4*10,.32,0xffa08a),pp=pk.geometry.attributes.position.array;
+  const red=new THREE.Color(AMDR);
+  return finalize({g,tc:[2.725,.32,.95],
+    upd(k,t){let n=0;mcs.forEach(([x,z],i)=>{for(let j=0;j<14;j++){const u=(t*.5+j/14+i*.21)%1,q=n++*3;pp[q]=lerp(x>0?.8:-.8,x*.9,u);pp[q+1]=.48;pp[q+2]=lerp(.55+(z>0?.4:-.4),z,u)+Math.sin(u*Math.PI)*.0;}});
+      mcs.forEach(([x,z],i)=>{const sz=z>0?1:-1;for(let j=0;j<10;j++){const u=(t*.7+j/10+i*.3)%1,q=n++*3;pp[q]=x-1.3+((j*.29)%2.6);pp[q+1]=.46;pp[q+2]=lerp(sz*3.975,sz*2.525,u);}});
+      pk.geometry.attributes.position.needsUpdate=true;
+      mcs.forEach((m,i)=>{let v=.25+.25*Math.sin(t*2.2+i*1.7);if(i===3)v=Math.max(v,sstep(.55,.75,k)*.85);_c.copy(red).multiplyScalar(v);gl.setColorAt(i,_c);});gl.instanceColor.needsUpdate=true;},
+    labels:[{p:[0,.39,.55],t:'LDS 160 КБ',s:'общая память CU',k0:.12,d:'u'},
+            {p:[2.725,.39,.95],t:'Matrix Core ×4',s:'матричные блоки',k0:.2,d:'d'},
+            {p:[-2.725,.38,-3.975],t:'VGPR',s:'векторные регистры',k0:.28,d:'u'},
+            {p:[-2.725,.37,2.525],t:'SIMD × 4',s:'16 линий каждый',k0:.34,d:'d'},
+            {p:[0,.37,-3.95],t:'планировщик',s:'wavefront = 64 потока',k0:.4,d:'u'}],
+    cam:{el:60,az:12,df:.95}});
+}
+
+/* 6 — one matrix core (1 unit ≈ 44 µm) */
+function bMC(){
+  const g=new THREE.Group();
+  const side=S(0x3a2e32,.55,.4),base=S(0xffffff,.4,.35,{map:rep(T.logicB,2,1)}),tileM=S(0xffffff,.5,.32,{map:T.mac}),bus=S(0xb8794a,1,.3),acc=S(0x6a6f7a,.8,.3);
+  const d=new THREE.Mesh(BOX,topM(side,base));d.scale.set(10,.38,5.4);d.position.y=-.19;g.add(d);
+  const NX=15,NZ=8,tiles=IM(g,BOX,tileM,NX*NZ),gl=IM(g,BOX,GL(0xffffff,1),NX*NZ),tp=[];
+  for(let i=0;i<NX;i++)for(let j=0;j<NZ;j++){const n=i*NZ+j,x=-3.9+i*.56,z=-1.83+j*.56;tp.push([x,z]);si(tiles,n,x,.04,z,.5,.08,.5);scol(tiles,n,0xffffff);si(gl,n,x,.083,z,.5,.004,.5);scol(gl,n,0);}
+  bx(g,bus,.32,.12,4.6,-4.55,.06,.13);bx(g,bus,8.4,.12,.32,0,.06,-2.38);bx(g,acc,.5,.16,4.6,4.5,.08,.13);
+  const pk=PTS(g,NZ*3+NX*2,.22,0xffc0a8),pp=pk.geometry.attributes.position.array;
+  const red=new THREE.Color(0xff5a40),TI=8*NZ+3;
+  return finalize({g,tc:[tp[TI][0],.081,tp[TI][1]],
+    upd(k,t){for(let n=0;n<NX*NZ;n++){const i=Math.floor(n/NZ),j=n%NZ,ph=(t*1.1-(i+j)*.16)%2.4;let v=ph>0&&ph<.5?Math.sin(ph/.5*Math.PI):0;v*=.8;if(n===TI)v=Math.max(v,sstep(.6,.8,k));_c.copy(red).multiplyScalar(v);gl.setColorAt(n,_c);}gl.instanceColor.needsUpdate=true;
+      let q=0;for(let j=0;j<NZ;j++)for(let s=0;s<3;s++){const u=(t*.5+s/3+j*.07)%1;pp[q++]=lerp(-4.5,4.1,u);pp[q++]=.16;pp[q++]=-1.83+j*.56;}
+      for(let i=0;i<NX;i++)for(let s=0;s<2;s++){const u=(t*.4+s/2+i*.05)%1;pp[q++]=-3.9+i*.56;pp[q++]=.16;pp[q++]=lerp(-2.4,2.2,u);}
+      pk.geometry.attributes.position.needsUpdate=true;},
+    labels:[{p:[-4.55,.13,1.8],t:'операнды A',s:'из регистров и LDS',k0:.15,d:'d'},
+            {p:[-2,.13,-2.38],t:'операнды B',s:'',k0:.22,d:'u'},
+            {p:[4.5,.17,1.6],t:'аккумулятор',s:'D = A×B + C',k0:.3,d:'d'},
+            {p:[tp[TI][0],.09,tp[TI][1]],t:'MAC-блок',s:'умножение + сложение',k0:.6,d:'u'}],
+    cam:{el:50,az:30,df:.9}});
+}
+
+/* 7 — standard cells (1 unit ≈ 80 nm) */
+function bCells(){
+  const g=new THREE.Group();
+  const sub=S(0x4a4e56,.35,.6),finM=S(0x8e939c,.3,.45),gateM=S(0xffffff,.75,.3),ct=S(0x8e949e,.85,.3),rail=S(0xb97c4c,1,.32),m2=S(0xc48a5a,1,.35,{opacity:.75}),via=S(0xd6d9de,.9,.3);
+  bx(g,sub,11.2,.4,9.2,0,-.2,0);
+  const rows=[-3.3,-1.1,1.1,3.3],fo=[-.82,-.49,.49,.82];
+  const fins=IM(g,BOX,finM,16);let c=0;for(const rz of rows)for(const f of fo){si(fins,c,0,.3,rz+f,11.2,.6,.075);scol(fins,c,0xffffff);c++;}
+  const NG=18,gates=IM(g,BOX,gateM,NG*4),gg=IM(g,BOX,GL(0xffffff,1),NG*4),r=rng(33),gx=[];c=0;
+  for(let ri=0;ri<4;ri++)for(let i=0;i<NG;i++){const x=-5.1+i*.6,cut=r()<.1&&!(ri===1&&i===9);gx.push(cut);si(gates,c,x,.5,rows[ri],cut?0:.2,1,1.95);scol(gates,c,0x7d838d);si(gg,c,x,.5,rows[ri],cut?0:.24,1.02,1.97);scol(gg,c,0);c++;}
+  const cts=IM(g,BOX,ct,120);c=0;for(let ri=0;ri<4;ri++)for(let i=0;i<NG-1;i++)for(const s of [-1,1]){if(c>=120)break;if(r()<.45){si(cts,c,-4.8+i*.6,.45,rows[ri]+s*.66,.12,.8,.6);scol(cts,c,0xffffff);c++;}}for(;c<120;c++)si(cts,c,0,0,0,0,0,0);
+  for(const z of [-4.4,-2.2,0,2.2,4.4])bx(g,rail,11.2,.14,.3,0,1.15,z);
+  const m2s=IM(g,BOX,m2,14),vv=IM(g,BOX,via,28);for(let i=0;i<14;i++){const x=-4.95+i*.76+(r()-.5)*.2;si(m2s,i,x,1.5,(r()-.5)*1.2,.1,.09,6+r()*2.5);scol(m2s,i,0xffffff);si(vv,i*2,x,1.32,rows[Math.floor(r()*4)]+.3,.1,.2,.1);si(vv,i*2+1,x,1.32,rows[Math.floor(r()*4)]-.3,.1,.2,.1);scol(vv,i*2,0xffffff);scol(vv,i*2+1,0xffffff);}
+  const TI=NG+9,red=new THREE.Color(AMDR);
+  return finalize({g,tc:[-5.1+9*.6,.3,-1.1+.49],
+    upd(k,t){for(let n=0;n<NG*4;n++){let v=0;if(!gx[n]){const s=Math.sin(t*2.3+n*1.91)*Math.sin(t*1.1+n*.7);v=s>.55?(s-.55)*1.6:0;}if(n===TI)v=Math.max(v,sstep(.45,.7,k)*(.75+.2*Math.sin(t*4)));_c.copy(red).multiplyScalar(v);gg.setColorAt(n,_c);}gg.instanceColor.needsUpdate=true;},
+    labels:[{p:[.3,1.0,-1.1],t:'затвор',s:'gate · шаг ~48 нм',k0:.45,d:'u'},
+            {p:[5.3,.6,1.1+.82],t:'плавник',s:'fin · кремний',k0:.15,d:'d'},
+            {p:[-4.2,1.22,-2.2],t:'VDD / VSS',s:'шины питания',k0:.22,d:'u'},
+            {p:[2.0,1.55,2.5],t:'металл M2',s:'межсоединения',k0:.3,d:'u'}],
+    cam:{el:44,az:34,df:.86}});
+}
+
+/* 8 — one FinFET (1 unit ≈ 12 nm) */
+function bFin(){
+  const g=new THREE.Group();
+  const sub=S(0x1c1f24,.35,.65),ox=S(0x1d3048,0,.25,{opacity:.6,depthWrite:false}),fin=S(0x3a3f48,.3,.5),gate=S(0x2a2e36,.9,.38),hk=S(0xff5a40,.2,.4,{emissive:0xff3b2a,emissiveIntensity:.5}),spc=S(0x4a505a,.2,.55),epi=S(0x34405a,.3,.5),ctm=S(0xb07a4a,1,.32);
+  bx(g,sub,12,2,9,0,-1.6,0);bx(g,ox,12,.9,9,0,-.15,0);
+  const FZ=[-1.1,1.1],FH=3.6,FY=1.2;
+  bx(g,fin,12,FH,.5,0,FY,FZ[0]);
+  bx(g,fin,5.3,FH,.5,-3.35,FY,FZ[1]);bx(g,fin,5.3,FH,.5,3.35,FY,FZ[1]);
+  bx(g,fin,1.39,FH,.254,0,FY,FZ[1]-.123);
+  bx(g,hk,1.38,2.82,.62,0,1.65,FZ[0]);bx(g,hk,1.38,2.82,.312,0,1.65,FZ[1]-.155+.001);
+  bx(g,gate,1.4,4.1,4.7,0,2.35,-1.25);
+  bx(g,spc,.12,4.1,4.7,-.76,2.35,-1.25);bx(g,spc,.12,4.1,4.7,.76,2.35,-1.25);
+  const oc=new THREE.OctahedronGeometry(1,0);
+  for(const z of FZ)for(const x of [-2.7,2.7]){const m=new THREE.Mesh(oc,epi);m.scale.set(1.5,1.25,.9);m.position.set(x,2.45,z);g.add(m);}
+  for(const z of FZ)for(const x of [-2.7,2.7])bx(g,ctm,.75,1.3,.75,x,3.95,z);bx(g,ctm,.7,1.2,.7,0,5.0,-2.6);
+  const ch=bx(g,GL(0xff6a50,.9),1.38,.8,.02,0,2.55,FZ[1]+.015);
+  const N=46,el=PTS(g,N*2,.28,0x9fd0ff),ep=el.geometry.attributes.position.array,ec=el.geometry.attributes.color.array;
+  const rr=rng(4),seed=[];for(let i=0;i<N*2;i++)seed.push([rr(),rr(),rr()]);
+  return finalize({g,tc:[0,2.2,FZ[1]+.004],
+    upd(k,t){const ph=(t%4.2)/4.2,on=sstep(.02,.1,ph)*(1-sstep(.62,.7,ph));ch.material.userData.f=on;
+      for(let i=0;i<N*2;i++){const s=seed[i],fz=i<N?FZ[0]:FZ[1];const u=(s[0]+t*.12*(.7+s[1]*.6))%1,x=lerp(-5.6,5.6,u);ep[i*3]=x;ep[i*3+1]=2.1+s[2]*.85;ep[i*3+2]=i<N?fz+(s[1]-.5)*.3:fz+.03;
+        const inGate=Math.abs(x)<.9;const a=inGate?on:(.25+.75*on);ec[i*3]=a*.6;ec[i*3+1]=a*.85;ec[i*3+2]=a;}
+      el.geometry.attributes.position.needsUpdate=true;el.geometry.attributes.color.needsUpdate=true;},
+    labels:[{p:[0,4.4,-2.6],t:'затвор',s:'металл + high-k',k0:.12,d:'u'},
+            {p:[5.6,3.0,FZ[1]],t:'плавник (fin)',s:'~6 нм в ширину',k0:.18,d:'u'},
+            {p:[0,2.55,FZ[1]+.02],t:'канал',s:'ток идёт при «1»',k0:.25,d:'d'},
+            {p:[-2.7,3.4,FZ[1]],t:'исток',s:'source',k0:.32,d:'u'},
+            {p:[2.7,3.4,FZ[1]],t:'сток',s:'drain',k0:.36,d:'u'}],
+    cam:{el:30,az:36,df:1.45}});
+}
+
+/* 9 — silicon lattice (1 unit ≈ 0.27 nm, cell a = 0.543 nm) */
+function bLat(){
+  const g=new THREE.Group(),a=2,nx=5,ny=3,nz=4;
+  const B=[[0,0,0],[0,.5,.5],[.5,0,.5],[.5,.5,0]],key=(x,y,z)=>Math.round(x*4)+','+Math.round(y*4)+','+Math.round(z*4);
+  const map=new Map(),at=[];
+  for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++)for(let k=0;k<=nz;k++)for(const b of B)for(const o of [0,.25]){const p=[i+b[0]+o,j+b[1]+o,k+b[2]+o];if(p[0]>nx+1e-6||p[1]>ny+1e-6||p[2]>nz+1e-6)continue;const kk=key(...p);if(!map.has(kk)){map.set(kk,at.length);at.push({p,A:o===0});}}
+  const C=[nx/2,ny/2,nz/2],W=p=>[(p[0]-C[0])*a,(p[1]-C[1])*a,(p[2]-C[2])*a];
+  const bonds=[];at.forEach(A=>{if(!A.A)return;for(const d of [[.25,.25,.25],[-.25,-.25,.25],[-.25,.25,-.25],[.25,-.25,-.25]]){const q=[A.p[0]+d[0],A.p[1]+d[1],A.p[2]+d[2]],kk=key(...q);if(map.has(kk))bonds.push([W(A.p),W(q)]);}});
+  const am=IM(g,new THREE.SphereGeometry(.26,18,14),S(0xffffff,.3,.45),at.length);
+  let best=0,bd=1e9;at.forEach((A,i)=>{const w=W(A.p);si(am,i,...w);scol(am,i,0x454b55);const dd=Math.hypot(w[0],w[1]-1.2,w[2]-1.5);if(dd<bd){bd=dd;best=i;}});
+  const bm=IM(g,new THREE.CylinderGeometry(.06,.06,1,6,1),S(0x343941,.5,.5),bonds.length);const up=new THREE.Vector3(0,1,0),dv=new THREE.Vector3();
+  bonds.forEach((b,i)=>{dv.set(b[1][0]-b[0][0],b[1][1]-b[0][1],b[1][2]-b[0][2]);const L=dv.length();dv.normalize();_o.quaternion.setFromUnitVectors(up,dv);_o.position.set((b[0][0]+b[1][0])/2,(b[0][1]+b[1][1])/2,(b[0][2]+b[1][2])/2);_o.scale.set(1,L,1);_o.updateMatrix();bm.setMatrixAt(i,_o.matrix);scol(bm,i,0xffffff);});
+  const cell=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(a,a,a)),new THREE.LineBasicMaterial({color:0xff5a40,transparent:true,opacity:.9}));const c0=W([1,1,2]);cell.position.set(c0[0]+a/2,c0[1]+a/2,c0[2]+a/2);g.add(cell);
+  const bw=W(at[best].p),hg=PTS(g,1,1.6,0xff6a50);hg.geometry.attributes.position.array.set(bw);hg.geometry.attributes.position.needsUpdate=true;
+  return finalize({g,tc:bw,
+    upd(k,t){const v=sstep(.4,.7,k);_c.set(0x454b55).lerp(new THREE.Color(0xff6a50),v*(.6+.4*Math.sin(t*4)));am.setColorAt(best,_c);am.instanceColor.needsUpdate=true;hg.material.userData.f=v*(.6+.3*Math.sin(t*4));},
+    labels:[{p:[c0[0]+a,c0[1]+a,c0[2]+a],t:'ячейка 0,543 нм',s:'решётка типа алмаза',k0:.12,d:'u'},
+            {p:[bw[0],bw[1]+.3,bw[2]],t:'атом Si',s:'4 связи · 0,235 нм',k0:.4,d:'u'}],
+    cam:{el:30,az:40,df:.95}});
+}
+
+/* 10 — one silicon atom */
+function bAtom(){
+  const g=new THREE.Group(),nuc=new THREE.Group();g.add(nuc);
+  const pm=S(0xe8503e,.2,.4,{emissive:0x5a1208,emissiveIntensity:.6}),nm=S(0xa6abb4,.3,.4),sg=new THREE.SphereGeometry(.3,20,16);
+  const r=rng(14);for(let i=0;i<28;i++){const inner=i<7,rad=inner?.28:.62,y=1-2*((i%21)+.5)/21,phi=i*2.39996,rr=Math.sqrt(1-y*y);const m=new THREE.Mesh(sg,i%2?pm:nm);m.position.set(Math.cos(phi)*rr*rad+(r()-.5)*.1,y*rad,Math.sin(phi)*rr*rad);nuc.add(m);}
+  const core=PTS(g,1,6,0xff6a40);
+  const shells=[[1.9,2,.9,[.3,0,.2]],[3.0,8,.55,[-.5,.4,0]],[4.3,4,.35,[.9,-.3,.4]]],els=[];
+  const em=S(0xbfe0ff,.1,.3,{emissive:0x7fbfff,emissiveIntensity:1.2}),eg=new THREE.SphereGeometry(.12,14,10);
+  const ep=PTS(g,14,.9,0x8fc8ff);
+  shells.forEach(([rad,n,sp,rot])=>{const sh=new THREE.Group();sh.rotation.set(...rot);g.add(sh);const pts=[];for(let i=0;i<=128;i++){const a=i/128*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*rad,0,Math.sin(a)*rad));}
+    sh.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x9fc4ff,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false})));
+    for(let i=0;i<n;i++){const e=new THREE.Mesh(eg,em);sh.add(e);els.push({e,sh,rad,sp,ph:i/n*Math.PI*2});}});
+  const _w=new THREE.Vector3();
+  return finalize({g,tc:[0,0,0],
+    upd(k,t){nuc.rotation.y=t*.25;nuc.rotation.x=t*.13;const p=ep.geometry.attributes.position.array;
+      els.forEach((o,i)=>{const a=o.ph+t*o.sp;o.e.position.set(Math.cos(a)*o.rad,0,Math.sin(a)*o.rad);o.e.updateMatrix();_w.copy(o.e.position).applyEuler(o.sh.rotation);p[i*3]=_w.x;p[i*3+1]=_w.y;p[i*3+2]=_w.z;});
+      ep.geometry.attributes.position.needsUpdate=true;core.material.userData.f=.35+.1*Math.sin(t*2);},
+    labels:[{p:[0,.7,0],t:'ядро',s:'14 протонов + 14 нейтронов',k0:.12,d:'u'},
+            {p:[4.3*Math.cos(.4),-1.6,0],t:'оболочки',s:'2 · 8 · 4 электрона',k0:.3,d:'d'}],
+    cam:{el:16,az:0,df:.9}});
+}
+
+const L=[bRack(),bNode(),bOAM(),bPkg(),bXCD(),bCU(),bMC(),bCells(),bFin(),bLat(),bAtom()];
+
+/* ---------- scenes ---------- */
+const SC=[
+ {gi:0,fov:2.4,act:'Дата-центр',yl:'Стойка',dur:9,
+  t:'AMD INSTINCT MI355X RACK',s:'LIQUID-COOLED · UP TO 128 GPUs PER RACK',
+  ru:'Стойка с ускорителями AMD Instinct MI355X — с неё начинаем разбор.',
+  d:'MI355X — флагман серии MI350 на архитектуре CDNA 4 (2025). Жидкостное охлаждение, до 128 GPU в одной стойке. Один узел выдвигается — заходим внутрь.'},
+ {gi:1,fov:.45,act:'Сервер',yl:'Узел',dur:10,
+  t:'ONE 8-GPU NODE',s:'8 × OAM MODULES · INFINITY FABRIC FULL MESH',
+  ru:'Узел: восемь модулей MI355X на общей плате UBB, рядом — два хост-процессора.',
+  d:'Каждый GPU связан с семью остальными по Infinity Fabric — 7 линков по 153,6 ГБ/с. К каждому модулю подведены трубки с охлаждающей жидкостью.'},
+ {gi:2,fov:.165,act:'Ускоритель',yl:'OAM',dur:10,
+  t:'MI355X OAM MODULE',s:'1400 W TBP · 288 GB HBM3E · 8 TB/s',
+  ru:'Модуль OAM: снимаем водоблок — под ним корпус процессора и силовая обвязка.',
+  d:'До 1400 Вт на модуль, поэтому MI355X — только с жидкостным охлаждением; воздушная MI350X ограничена 1000 Вт. Вокруг корпуса — VRM и конденсаторы развязки.'},
+ {gi:3,fov:.076,act:'Корпус',yl:'Корпус',dur:11,
+  t:'185 BILLION TRANSISTORS',s:'8 XCD ON 2 IOD · 8 × HBM3E 12-HI · 3D + 2.5D PACKAGING',
+  ru:'Корпус: восемь вычислительных кристаллов XCD стоят прямо на двух I/O-кристаллах, по бокам — 8 стеков HBM3E.',
+  d:'XCD (TSMC N3P) соединены с IOD (N6) гибридным 3D-бондингом, IOD с памятью — через кремниевый интерпозер (2,5D). Стек HBM3E — 12 слоёв DRAM, 36 ГБ.'},
+ {gi:4,fov:.0126,act:'Кристалл',yl:'XCD',dur:9,
+  t:'ONE XCD · ACCELERATOR COMPLEX DIE',s:'36 COMPUTE UNITS · 32 ENABLED · ~110 MM²',
+  ru:'Один XCD: 36 вычислительных блоков (CU), работают 32 — четыре в резерве.',
+  d:'Резервные CU отключают, если в них брак, — так растёт выход годных кристаллов. На весь GPU: 8 × 32 = 256 CU. Посередине — L2-кэш на 4 МБ.'},
+ {gi:5,fov:1.39e-3,act:'Кристалл',yl:'CU',dur:10,
+  t:'ONE COMPUTE UNIT',s:'4 SIMD · 4 MATRIX CORES · 64 STREAM PROCESSORS · 160 KB LDS',
+  ru:'Compute Unit: четыре SIMD-блока по 16 линий, у каждого свой Matrix Core и векторные регистры.',
+  d:'В центре — LDS на 160 КБ (в CDNA 3 было 64 КБ): из неё данные идут прямо в матричные блоки. Wavefront — 64 потока, выполняющих одну инструкцию.'},
+ {gi:6,fov:4.38e-4,act:'Кристалл',yl:'Матрица',dur:9,
+  t:'ONE MATRIX CORE',s:'D = A × B + C · FROM FP64 DOWN TO FP4',
+  ru:'Matrix Core — сетка блоков умножения с накоплением. Данные проходят через неё волной.',
+  d:'CU в CDNA 4 делает 8192 операции FP8 за такт — вдвое больше, чем в MI300X. Добавлены FP6 и FP4 для инференса. Схема упрощена: реальная топология не публикуется.'},
+ {gi:7,fov:8e-7,act:'Логика',yl:'Ячейки',dur:9,
+  t:'STANDARD CELLS',s:'GATES CROSS FINS · EVERY CROSSING IS A TRANSISTOR',
+  ru:'Логические ячейки: вертикальные затворы пересекают горизонтальные «плавники» кремния.',
+  d:'Сверху — шины питания VDD/VSS и слои металла. Шаг затворов на N3 — около 48 нм. Топология схематичная.'},
+ {gi:8,fov:1.2e-7,act:'Транзистор',yl:'FinFET',dur:11,
+  t:'ONE FINFET TRANSISTOR',s:'GATE WRAPS THE FIN ON THREE SIDES',
+  ru:'FinFET: затвор охватывает кремниевый плавник с трёх сторон и открывает или закрывает канал.',
+  d:'Есть напряжение на затворе — электроны идут от истока к стоку (1). Нет — тока нет (0). Между затвором и каналом — слой high-k диэлектрика толщиной в пару нанометров.'},
+ {gi:9,fov:2.7e-9,act:'Атомы',yl:'Решётка',dur:9,
+  t:'SILICON CRYSTAL',s:'0.235 NM BETWEEN ATOMS · DIAMOND LATTICE',
+  ru:'Кристаллическая решётка кремния: каждый атом связан с четырьмя соседями.',
+  d:'Расстояние между соседними атомами — 0,235 нм, ребро элементарной ячейки — 0,543 нм. Плавник транзистора — пара десятков атомов в ширину.'},
+ {gi:10,fov:3e-10,act:'Атом',yl:'Атом',dur:10,
+  t:'ONE SILICON ATOM',s:'14 PROTONS · 14 ELECTRONS · SHELLS 2-8-4',
+  ru:'Атом кремния: 14 протонов, 14 нейтронов и 14 электронов на трёх оболочках.',
+  d:'Модель Бора — упрощение: на деле электроны — облака вероятности, а не шарики на орбитах.'},
+ {gi:0,fov:2.4,act:'Обратно',yl:'Назад',dur:15,outro:1,cam:{el:12,az:30,df:1.22},
+  t:'8 BILLION TIMES CLOSER',s:'FROM A 2.4 M SERVER ROW DOWN TO 0.3 NM',
+  ru:'От серверной стойки до одного атома — приближение примерно в 8 миллиардов раз.',
+  d:'185 миллиардов транзисторов в одном MI355X, восемь GPU в узле, до 128 — в стойке.'}
+];
+const N=SC.length,NZ=11;
+/* derive zoom targets: B spans 10 units ⇒ s = fov[i+1]/fov[i]*10 */
+for(let i=0;i<NZ-1;i++)L[i].ts=SC[i+1].fov/SC[i].fov*10;
+const BG=[['#1e2127','#08090b'],['#1d2025','#07080a'],['#1f1e23','#070709'],['#201d23','#070608'],['#1c1b25','#060609'],['#1d1b27','#060609'],['#231b1d','#070506'],['#212327','#08090a'],['#202226','#070809'],['#151927','#04050a'],['#131529','#03030a']];
+
+/* ---------- state ---------- */
+let cur=0,sceneT=0,playing=false,tr=null,chain=[],gT=0;
+const TRZ=RM?.8:2.5;
+let W=0,H=0,VO=0;const W0=()=>cv.clientWidth;
+function resize(){const dpr=Math.min(W0()<620?1.75:2,window.devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;R.setPixelRatio(dpr);R.setSize(W,H,false);
+  VO=Math.round(H*(W<620?.11:.06));CAM.aspect=W/(H+2*VO);CAM.setViewOffset(W,H+2*VO,0,2*VO,W,H);CAM.updateProjectionMatrix();}
+addEventListener('resize',resize);resize();
+function fitDist(){const v=CAM.fov*Math.PI/180,h=2*Math.atan(Math.tan(v/2)*CAM.aspect);return 6.2/Math.sin(Math.min(v,h)/2);}
+const kOf=i=>clamp(sceneT/SC[i].dur,0,1);
+function camOf(i,k){const c=SC[i].cam||L[SC[i].gi].cam;return {el:c.el,az:c.az+k*7,df:c.df*(1-.07*k)};}
+function camLerp(a,b,q){return {el:lerp(a.el,b.el,q),az:lerp(a.az,b.az,q),df:lerp(a.df,b.df,q)};}
+const _t=new THREE.Vector3();
+function place(gi,sc,x,y,z,a,k){const o=L[gi];o.g.visible=a>.004;if(!o.g.visible)return;o.g.scale.setScalar(sc);o.g.position.set(x,y,z);o.alpha=a;o.sc=sc;o.k=k;}
+function applyGroup(o){for(const m of o.mats){m.opacity=m.userData.bo*(m.userData.f===undefined?1:m.userData.f)*o.alpha;}for(const m of o.pmats)m.size=m.userData.ps*o.sc;}
+
+let fovNow=SC[0].fov;
+function layout(){
+  L.forEach(o=>{o.g.visible=false;});
+  let cam;
+  if(tr&&tr.type==='z'){
+    const p=clamp(tr.t/tr.d,0,1),e=tr.chain?(tr.first&&tr.last?ease(p):tr.first?p*p:tr.last?1-(1-p)*(1-p):p):ease(p),q=lerp(tr.q0,tr.q1,e);
+    const A=L[tr.lo],T=A.tc,s=A.ts,r=s/10,Z=10/s,za=Math.pow(Z,q);
+    const kl=tr.chain?1:(tr.lo===cur?kOf(cur):1),kh=tr.chain?1:(tr.hi===cur?kOf(cur):tr.khi);
+    const aA=RM?1-q:1-sstep(.42,.86,q),aB=RM?q:sstep(.12,.6,q);
+    place(tr.lo,za,-T[0]*za*q,-T[1]*za*q,-T[2]*za*q,aA,kl);
+    place(tr.hi,za*r,T[0]*za*(1-q),T[1]*za*(1-q),T[2]*za*(1-q),aB,kh);
+    cam=camLerp(camOf(tr.lo,kl),camOf(tr.hi,kh),sstep(0,1,q));
+    if(tr.chain&&tr.last&&tr.lo===0){cam=camLerp(camOf(0,1),camOf(11,0),1-q);}
+    fovNow=Math.pow(10,lerp(Math.log10(SC[tr.lo].fov),Math.log10(SC[tr.hi].fov),q));
+    bgSet(tr.lo,tr.hi,q);
+  }else if(tr&&tr.type==='f'){
+    const p=ease(clamp(tr.t/tr.d,0,1)),ga=SC[tr.a].gi,gb=SC[tr.b].gi;
+    if(ga===gb){place(gb,1,0,0,0,1,kOf(cur));}else{place(ga,1,0,0,0,1-p,1);place(gb,1,0,0,0,p,kOf(cur));}
+    cam=camLerp(camOf(tr.a,1),camOf(tr.b,kOf(cur)),p);
+    fovNow=Math.pow(10,lerp(Math.log10(SC[tr.a].fov),Math.log10(SC[tr.b].fov),p));bgSet(ga,gb,p);
+  }else{
+    const k=kOf(cur),gi=SC[cur].gi;place(gi,1,0,0,0,1,SC[cur].outro?1:k);cam=camOf(cur,k);fovNow=SC[cur].fov;bgSet(gi,gi,0);
+  }
+  const drift=RM?0:Math.sin(gT*.21)*2.2;
+  const el=cam.el*Math.PI/180,az=(cam.az+drift)*Math.PI/180,d=fitDist()*cam.df;
+  CAM.position.set(Math.sin(az)*Math.cos(el)*d,Math.sin(el)*d,Math.cos(az)*Math.cos(el)*d);CAM.lookAt(0,0,0);
+}
+let bgKey='';const app=$('#app');
+function mix(a,b,t){const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16);const c=i=>Math.round(lerp(A>>i&255,B>>i&255,t));return `rgb(${c(16)},${c(8)},${c(0)})`;}
+function bgSet(a,b,q){const k=a+'|'+b+'|'+q.toFixed(2);if(k===bgKey)return;bgKey=k;app.style.background=`radial-gradient(ellipse 80% 70% at 50% 40%, ${mix(BG[a][0],BG[b][0],q)}, ${mix(BG[a][1],BG[b][1],q)})`;}
+
+/* ---------- labels ---------- */
+const LB=$('#labels'),brk=$('#brk');
+SC.forEach((s,i)=>{s.lbs=[];if(s.outro)return;(L[s.gi].labels||[]).forEach(l=>{const e=document.createElement('div');e.className='lb '+(l.d||'u');e.innerHTML=`<div class="ln"></div><div class="dt"></div><div class="bx"><b>${l.t}</b>${l.s?`<i>${l.s}</i>`:''}</div>`;LB.appendChild(e);s.lbs.push({l,e,bx:e.querySelector('.bx'),w:0,vis:false});});});
+const _v=new THREE.Vector3(),_r=new THREE.Vector3();
+function project(g,p){_v.set(p[0],p[1],p[2]);g.localToWorld(_v);_v.project(CAM);return [(_v.x*.5+.5)*W,(-_v.y*.5+.5)*H,_v.z];}
+let shownFor=-1;
+let capTop=1e9;function updLabels(){capTop=cap.getBoundingClientRect().top-app.getBoundingClientRect().top-8;
+  const settled=!tr,s=SC[cur];
+  SC.forEach((sc,i)=>{if(i!==cur||!settled)sc.lbs.forEach(o=>{if(o.vis){o.e.style.opacity=0;o.vis=false;}});});
+  if(!settled||s.outro){brk.style.opacity=0;return;}
+  const k=kOf(cur),g=L[s.gi].g;
+  s.lbs.forEach(o=>{const on=k>=o.l.k0;const [x,y,z]=project(g,o.l.p);
+    if(on&&z<1){if(!o.w)o.w=o.bx.offsetWidth||90;const half=o.w/2,dx=clamp(x-half,8,W-o.w-58)-x;o.e.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;o.bx.style.transform=`translateX(${dx.toFixed(1)}px)`;}
+    const want=on&&z<1&&y<capTop&&y>40&&x>4&&x<W-4;if(want!==o.vis){o.vis=want;o.e.style.opacity=want?1:0;}});
+  if(cur<NZ-1&&k>.72){const o=L[s.gi],T=o.tc;_v.set(T[0],T[1],T[2]);o.g.localToWorld(_v);const c=_v.clone().project(CAM);_r.setFromMatrixColumn(CAM.matrixWorld,0).multiplyScalar(o.ts*.5*o.g.scale.x*.75);const e=_v.add(_r).project(CAM);
+    const cx=(c.x*.5+.5)*W,cy=(-c.y*.5+.5)*H,rad=Math.max(14,Math.abs((e.x-c.x)*.5*W));brk.style.transform=`translate(${(cx-rad).toFixed(1)}px,${(cy-rad).toFixed(1)}px)`;brk.style.width=brk.style.height=(2*rad).toFixed(1)+'px';brk.style.opacity=sstep(.72,.82,k);}
+  else brk.style.opacity=0;
+}
+
+/* ---------- UI ---------- */
+const cap=$('#cap');let capTO=0;
+const fmtLen=m=>{const f=(v,u)=>(v>=10?Math.round(v):(Math.round(v*10)/10)).toString().replace('.',',')+' '+u;return m>=1?f(m,'м'):m>=.01?f(m*100,'см'):m>=1e-3?f(m*1e3,'мм'):m>=1e-6?f(m*1e6,'мкм'):f(m*1e9,'нм');};
+const fmtZ=n=>n<1e3?'×'+Math.round(n):n<1e6?'×'+(n<1e4?(n/1e3).toFixed(1).replace('.',','):Math.round(n/1e3))+' тыс.':n<1e9?'×'+(n<1e7?(n/1e6).toFixed(1).replace('.',','):Math.round(n/1e6))+' млн':'×'+(n/1e9).toFixed(1).replace('.',',')+' млрд';
+const LMAX=.4,LMIN=-10,rpos=m=>clamp((LMAX-Math.log10(m))/(LMAX-LMIN),0,1)*100;
+{const ru=$('#ruler');for(let e=0;e>=-10;e--){if(e%2&&e!==-1&&e!==-9)continue;const m=Math.pow(10,e),top=rpos(m)+'%';const tk=document.createElement('div');tk.className='tk';tk.style.top=top;ru.appendChild(tk);const l=document.createElement('div');l.className='tlab';l.style.top=top;l.textContent=fmtLen(m);ru.appendChild(l);}}
+const segs=$('#segs');
+SC.forEach((s,i)=>{const b=document.createElement('button');b.className='seg';b.setAttribute('aria-label',`Сцена ${i+1}: ${s.ru}`);b.innerHTML='<span class="f"></span>'+(i%2===0||i===N-1?`<span class="y">${s.yl}</span>`:'');b.addEventListener('click',()=>go(i));segs.appendChild(b);});
+const segEls=[...segs.children];
+function updateUI(){const s=SC[cur];$('#act').textContent=s.act;
+  cap.classList.add('out');clearTimeout(capTO);
+  capTO=setTimeout(()=>{$('#capT').textContent=s.t;$('#capS').textContent=s.s;$('#capR').textContent=s.ru;$('#capD').textContent=s.d;cap.classList.remove('out');},280);
+  segEls.forEach((e,i)=>{e.classList.toggle('done',i<cur);e.classList.toggle('cur',i===cur);if(i!==cur)e.firstChild.style.width='';});}
+function chainStep(){const lo=chain.shift(),first=tr===null||!tr.chain,last=chain.length===0;tr={type:'z',chain:1,lo,hi:lo+1,q0:1,q1:0,t:0,d:RM?.35:(first?1.4:last?1.6:.72),first,last};}
+function go(i){
+  i=clamp(i,0,N-1);if(i===cur&&!tr)return;const from=cur;chain=[];
+  if(i===from+1&&from<NZ-1){tr={type:'z',lo:from,hi:i,q0:0,q1:1,t:0,d:TRZ,khi:0};sceneT=0;}
+  else if(i===from-1&&from<NZ){tr={type:'z',lo:i,hi:from,q0:1,q1:0,t:0,d:TRZ,khi:kOf(from)};sceneT=SC[i].dur*.8;}
+  else if(SC[i].outro&&from===NZ-1){for(let l=NZ-2;l>=0;l--)chain.push(l);tr=null;chainStep();sceneT=0;}
+  else{tr={type:'f',a:from,b:i,t:0,d:RM?.5:1.2};sceneT=0;}
+  cur=i;updateUI();blip();
+}
+const IC={play:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M4.5 2.6v10.8L13 8z" fill="currentColor"/></svg>',
+  pause:'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="3" height="11" rx=".8" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx=".8" fill="currentColor"/></svg>',
+  snd:'<svg width="17" height="17" viewBox="0 0 16 16"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M10.5 5.5a3.5 3.5 0 0 1 0 5M12.3 3.6a6 6 0 0 1 0 8.8" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>',
+  mute:'<svg width="17" height="17" viewBox="0 0 16 16"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M10.5 6l4 4M14.5 6l-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'};
+const bPlay=$('#bPlay'),bSnd=$('#bSnd');
+function syncPlay(){bPlay.innerHTML=playing?IC.pause:IC.play;bPlay.setAttribute('aria-label',playing?'Пауза':'Пуск');updMaster();}
+function togglePlay(){if(!playing&&cur===N-1&&sceneT>=SC[cur].dur)go(0);playing=!playing;syncPlay();}
+bPlay.onclick=togglePlay;$('#bPrev').onclick=()=>go(cur-1);$('#bNext').onclick=()=>go(cur+1);
+const intro=$('#intro');
+function start(){intro.classList.add('hide');playing=true;syncPlay();}
+$('#bStart').onclick=start;
+addEventListener('keydown',e=>{
+  if(!intro.classList.contains('hide')){if(e.code==='Space'||e.code==='Enter'){e.preventDefault();start();}return;}
+  if(e.code==='Space'){e.preventDefault();togglePlay();}else if(e.code==='ArrowRight')go(cur+1);else if(e.code==='ArrowLeft')go(cur-1);else if(e.code==='Home')go(0);});
+let px0=null;
+cv.addEventListener('pointerdown',e=>{px0=e.clientX});
+cv.addEventListener('pointerup',e=>{if(px0===null)return;const dx=e.clientX-px0;px0=null;if(dx<-50)go(cur+1);else if(dx>50)go(cur-1);else if(Math.abs(dx)<8&&intro.classList.contains('hide'))togglePlay();});
+
+/* ---------- sound (optional): pitch follows zoom depth ---------- */
+let AC=null,MG=null,O1=null,O2=null,sndOn=false;
+function audioInit(){if(AC)return;const C=window.AudioContext||window.webkitAudioContext;if(!C)return;AC=new C();MG=AC.createGain();MG.gain.value=0;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;lp.connect(MG);MG.connect(AC.destination);
+  const g1=AC.createGain(),g2=AC.createGain();g1.gain.value=.05;g2.gain.value=.025;O1=AC.createOscillator();O1.type='sine';O2=AC.createOscillator();O2.type='triangle';O2.detune.value=6;O1.connect(g1);O2.connect(g2);g1.connect(lp);g2.connect(lp);O1.start();O2.start();}
+function blip(){if(!AC||!sndOn)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(1100,t);o.frequency.exponentialRampToValueAtTime(550,t+.15);g.gain.setValueAtTime(.035,t);g.gain.exponentialRampToValueAtTime(.0001,t+.25);o.connect(g);g.connect(MG);o.start(t);o.stop(t+.3);}
+function updMaster(){if(!AC)return;MG.gain.setTargetAtTime(sndOn&&playing?1:0,AC.currentTime,.3);}
+function syncSnd(){bSnd.innerHTML=sndOn?IC.snd:IC.mute;bSnd.setAttribute('aria-pressed',String(sndOn));bSnd.setAttribute('aria-label',sndOn?'Выключить звук':'Включить звук');}
+bSnd.onclick=()=>{audioInit();if(!AC)return;AC.resume();sndOn=!sndOn;updMaster();syncSnd();};
+
+/* ---------- loop ---------- */
+let last=performance.now(),zStr='',sStr='';
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;gT+=dt;
+  if(playing){sceneT+=dt;if(!tr&&sceneT>=SC[cur].dur){if(cur<N-1)go(cur+1);else{sceneT=SC[cur].dur;playing=false;syncPlay();}}}
+  if(tr){tr.t+=dt;if(tr.t>=tr.d){if(tr.chain&&chain.length)chainStep();else tr=null;}}
+  layout();
+  L.forEach(o=>{if(o.g.visible){o.upd(o.k,gT);applyGroup(o);}});
+  SCN.updateMatrixWorld();CAM.updateMatrixWorld();
+  R.render(SCN,CAM);
+  updLabels();
+  segEls[cur].firstChild.style.width=(clamp(sceneT/SC[cur].dur,0,1)*100)+'%';
+  const zs=fmtZ(SC[0].fov/fovNow),ss='~'+fmtLen(fovNow);if(zs!==zStr){zStr=zs;$('#zm').textContent=zs;}if(ss!==sStr){sStr=ss;$('#scv').textContent=ss;$('#mk').style.top=rpos(fovNow)+'%';}
+  if(AC&&sndOn){const f=55*Math.pow(2,Math.log10(SC[0].fov/fovNow)/3.2);O1.frequency.setTargetAtTime(f,AC.currentTime,.15);O2.frequency.setTargetAtTime(f*1.5,AC.currentTime,.15);}
+  requestAnimationFrame(frame);
+}
+updateUI();syncPlay();syncSnd();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
