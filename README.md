@@ -16,3 +16,7 @@ sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT   # + порт 80/443 в Secu
 
 ## Локально
 `docker compose up --build` -> http://localhost
+
+## GitHub Pages
+Push в `main` -> workflow `pages.yml` публикует `site/` на https://olehhavrilko.github.io/gpu-visualisation-oracle/
+Один раз включить: Settings -> Pages -> Source: **GitHub Actions**.
